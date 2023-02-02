@@ -38,7 +38,7 @@ today_date = get_kst_today()
 
 
 current_path = Path.cwd() if ENV == "local" else Path.home() / "server" / "crawler"
-image_dir = current_path.parent / "image-server" / "static" / "images"
+image_dir = current_path.parent / "api" / "static" / "images"
 image_dir.mkdir(parents=True, exist_ok=True)
 
 
