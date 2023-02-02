@@ -37,7 +37,7 @@ def get_kst_today():
 today_date = get_kst_today()
 
 
-current_path = Path.cwd() if ENV == "local" else Path.home() / "mapleinfo" / "crawler"
+current_path = Path.cwd() if ENV == "local" else Path.home() / "server" / "crawler"
 image_dir = current_path.parent / "image-server" / "static" / "images"
 image_dir.mkdir(exist_ok=True)
 
