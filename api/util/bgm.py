@@ -22,8 +22,7 @@ async def append_list(sv, ws: WebSocket, data):
   }
   await ws.send_json(res)
 
-bgm_controller = {
-  'play': play_video,
-  'pause': pause_video,
-  'append': append_list,
-}
+async def handler(sv, ws, ev_name, data):
+  if ev_name == 'play': await play_video(sv, ws, data),
+  if ev_name == 'pause': await pause_video(sv, ws, data),
+  if ev_name == 'append': await append_list(sv, ws, data),

@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket
 import uvicorn
 from dotenv import load_dotenv
-from util import util
+from util import bgm
 
 class StreamviewServer():
   def __init__(self):
@@ -45,11 +45,12 @@ class StreamviewServer():
     async def websocket_endpoint(websocket: WebSocket):
       await websocket.accept()
       while True:
-        ws_data = await websocket.receive_json()
-        ws_type = ws_data['event']['type']
-        ws_name = ws_data['event']['name']
+        raw = await websocket.receive_json()
+        ev_type = raw['event']['type']
+        ev_name = raw['event']['name']
+        data = raw['data']
         try:
-          await util[ws_type][ws_name](self, websocket, ws_data['data'])
+          if ev_type == 'bgm': await bgm.handler(self, websocket, ev_name, data)
         except:
           traceback.print_exc()
           await websocket.send_json(f"error")
