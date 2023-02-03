@@ -1,1 +1,1 @@
-__all__ = ['bgm']
+__all__ = ['bgm', 'finder']

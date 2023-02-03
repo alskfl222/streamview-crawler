@@ -19,31 +19,28 @@ class StreamviewServer():
     app = FastAPI()
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
-    self.queue = [
-        { "id": 'HoSQqadfiag', "from": 'streamer' },
-        { "id": 'oKCQJ8w5e3E', "from": 'streamer' },
-        { "id": 'pnxYMsBdyxo', "from": 'streamer' },
-        { "id": 'b12-WUgXAzg', "from": 'streamer' },
+    self.original = [
+        { "name": "Elliot Hsu - Spiraling Gales", "id": 'HoSQqadfiag', "from": 'list' },
+        { "name": "꿈의 도시 레헬른 (Lacheln, The City of Dreams) (Chill House Lounge Ver.) ｜메이플스토리 : 아케인리버 (크라우드펀딩)",
+          "id": 'oKCQJ8w5e3E', "from": 'list' },
+        { "name": "Galshi Revolution - Shot", "id": 'pnxYMsBdyxo', "from": 'list' },
+        { "name": "Fairy Tale", "id": 'b12-WUgXAzg', "from": 'list' },
+        { "name": "Ryoshi - Dawn", "id": "QWdwrfxspxo", "from": 'list' },
+        { "name": "Xomu & Justin Klyvis - Setsuna (Kirara Magic Remix)", "id": "Qz-Fu7nVo3c", "from": 'list' },
+        { "name": "두번째달(2nd Moon) - 얼음연못(Ice Pond) [OST of Goong]", "id": "BZYVj8P2D18", "from": 'list' },
       ]
+    self.queue = [*self.original[:5]]
+    self.finder = finder.Finder()
 
     @app.get("/")
     async def get_index():
       return "Hello World!"
 
-    @app.get("/list")
-    async def get_list():
-      queue = [
-        { "id": 'HoSQqadfiag', "from": 'streamer' },
-        { "id": 'oKCQJ8w5e3E', "from": 'streamer' },
-        { "id": 'pnxYMsBdyxo', "from": 'streamer' },
-        { "id": 'b12-WUgXAzg', "from": 'streamer' },
-      ]
-      return { "event": { 'type': 'bgm', 'name': 'queue' },
-               "data": { "queue": queue } }
-
     @app.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket):
       await websocket.accept()
+      await self.init_list(websocket)
+
       while True:
         raw = await websocket.receive_json()
         ev_type = raw['event']['type']
@@ -64,5 +61,17 @@ class StreamviewServer():
     )
 
     uvicorn.run(app=app, host='0.0.0.0', port=PORT)
+  
+  async def init_list(self, websocket: WebSocket):
+    res = {
+        "event": {
+          "type": 'bgm',
+          "name": "queue"
+        },
+        "data": {
+          "queue": self.queue
+        }
+      }
+    await websocket.send_json(res)
 
 StreamviewServer()
