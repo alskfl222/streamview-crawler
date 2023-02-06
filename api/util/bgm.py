@@ -38,8 +38,7 @@ async def append_list(sv, ws: WebSocket, data):
   print(f"APPEND VIDEO ID: {data['query']}")
   print(f"APPEND VIDEO FROM: {data['from']}")
   name, song_id = await sv.finder.find_song(data['query'])
-  print(name, song_id)
-  if song_id in [x['id'] for x in sv.queue]:
+  if not name or song_id in [x['id'] for x in sv.queue]:
     await send_queue(sv, ws, 'duplicated')
   else:
     insert = { "name": name, "id": song_id, "from": data['from'] }
