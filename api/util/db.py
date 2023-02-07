@@ -5,7 +5,7 @@ import os
 import json
 import requests
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Key, Attr
 from dotenv import load_dotenv
 
 class DB():
@@ -19,7 +19,7 @@ class DB():
     print()
     print(f"TOTAL LISTS: {len(self.table_monthly.scan()['Items'])}")
     print(f"TOTAL SONGS: {len(self.table_total.scan()['Items'])}")
-
+    print()
 
   def get_query_string(self, query):
     query = { **query, "key": self.API_KEY }
@@ -28,7 +28,6 @@ class DB():
       container.append(f"{i[0]}={i[1]}")
     query_string = f"?{'&'.join(container)}"
     return query_string
-
 
   def get_lists_all(self, base_url, query):
     query_string = self.get_query_string(query)
@@ -49,7 +48,6 @@ class DB():
       return [*lists, *self.get_lists_all(base_url, next_query)]
     return lists
 
-
   def get_playlists(self):
     base_url = 'https://www.googleapis.com/youtube/v3/playlists'
     query = {
@@ -61,7 +59,6 @@ class DB():
     lists = [x for x in lists if x['title'].startswith('BGM')]
     lists = sorted(lists, key=lambda x: x['title'])
     return lists
-
 
   def get_list_items_all(self, base_url, query):
     query_string = self.get_query_string(query)
@@ -85,7 +82,6 @@ class DB():
       next_query = { **query, 'pageToken': data["nextPageToken"] }
       return [*list_items, *self.get_list_items_all(base_url, next_query)]
     return list_items
-
 
   def get_playlist_items(self, playlist_id):
     base_url = 'https://www.googleapis.com/youtube/v3/playlistItems'
@@ -118,13 +114,19 @@ class DB():
           Item=row
         )
 
+  def get_monthly_list(self, list_name):
+    res = self.table_monthly.scan(
+      FilterExpression=Attr('title').eq(list_name)
+    )
+    item = res['Items'][0]
+    monthly_list = item['items']
+    return monthly_list
 
   def get_item_index(self, id, items):
     for idx, item in enumerate(items):
       if item['id'] == id:
         return idx
     return -1
-
 
   def get_update_params(self, body):
     # https://stackoverflow.com/a/62030403/15280469
@@ -136,7 +138,6 @@ class DB():
         update_values[f":{key}"] = val
 
     return "".join(update_expression)[:-1], update_values
-
 
   def update_song_in_monthly(self, monthly_id, song_id, update_values):
     res_monthly = self.table_monthly.scan(
@@ -157,7 +158,6 @@ class DB():
       }
     )
 
-
   def update_song_in_total(self, song_id, update_values):
     a, v = self.get_update_params(update_values)
     self.table_total.update_item(
@@ -165,7 +165,6 @@ class DB():
       UpdateExpression=a,
       ExpressionAttributeValues=dict(v)
     )
-
 
   def update_song(self, monthly_id, song_id, update_values):
     self.update_song_in_monthly(monthly_id, song_id, update_values)

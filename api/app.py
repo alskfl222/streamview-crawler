@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import datetime
 import os
 import traceback
 from fastapi import FastAPI
@@ -19,16 +20,12 @@ class StreamviewServer():
     app = FastAPI()
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
-    self.original = [
-        { "name": "Elliot Hsu - Spiraling Gales", "id": 'HoSQqadfiag', "from": 'list' },
-        { "name": "꿈의 도시 레헬른 (Lacheln, The City of Dreams) (Chill House Lounge Ver.) ｜메이플스토리 : 아케인리버 (크라우드펀딩)",
-          "id": 'oKCQJ8w5e3E', "from": 'list' },
-        { "name": "Galshi Revolution - Shot", "id": 'pnxYMsBdyxo', "from": 'list' },
-        { "name": "Fairy Tale", "id": 'b12-WUgXAzg', "from": 'list' },
-        { "name": "Ryoshi - Dawn", "id": "QWdwrfxspxo", "from": 'list' },
-        { "name": "Xomu & Justin Klyvis - Setsuna (Kirara Magic Remix)", "id": "Qz-Fu7nVo3c", "from": 'list' },
-        { "name": "두번째달(2nd Moon) - 얼음연못(Ice Pond) [OST of Goong]", "id": "BZYVj8P2D18", "from": 'list' },
-      ]
+    today = datetime.datetime.now()
+    monthly_list_name = f'BGM {today.year} {today.month:0>2}'
+    print(monthly_list_name)
+
+    self.db = db.DB()
+    self.original = self.db.get_monthly_list(monthly_list_name)
     self.queue = [*self.original[:5]]
     self.finder = finder.Finder()
 
