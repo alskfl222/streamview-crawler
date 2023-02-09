@@ -153,7 +153,8 @@ class DB():
                     Item=row
                 )
                 print(f"DB MONTHLY UPDATED : {each_list['title']}")
-                new_list_items = [x for x in list_items if not self.check_exist(x)]
+                new_list_items = [
+                    x for x in list_items if not self.check_exist(x)]
                 new_lists_items.extend(new_list_items)
 
             if new_lists_items:
@@ -240,6 +241,7 @@ class DB():
         )
         if not self.check_exist(item):
             print("ADDED NEW IN TOTAL TABLE")
+            self.total_list = [*self.total_list, item]
             self.total.put_item(
                 Item=item
             )
