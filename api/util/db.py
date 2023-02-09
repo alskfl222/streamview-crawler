@@ -13,19 +13,31 @@ from dotenv import load_dotenv
 class DB():
     def __init__(self):
         load_dotenv()
+        print()
+        print("DB init")
+        self.stream_time = f"{datetime.datetime.now():%Y-%m-%d_%H:%M:%S}"
+        self.API_KEY = os.getenv('YOUTUBE_API_KEY')
+        print(f"INIT TIME : {self.stream_time}")
+        print()
         self.dynamodb = boto3.resource('dynamodb')
         self.total = self.dynamodb.Table('total')
         self.monthly = self.dynamodb.Table('monthly')
         self.streamed = self.dynamodb.Table('streamed')
-        self.stream_time = f"{datetime.datetime.now():%Y-%m-%d_%H:%M:%S}"
+
+        self.total_list = self.get_total_list()
+        lists_count, new_total_list = self.check_update_monthly()
+        if new_total_list:
+            self.total_list = new_total_list
+
         self.stream_list = []
-        self.API_KEY = os.getenv('YOUTUBE_API_KEY')
-        print("DB init")
-        print(f"INIT TIME : {self.stream_time}")
+
         print()
-        print(f"TOTAL LISTS: {len(self.monthly.scan()['Items'])}")
+        print(f"TOTAL LISTS: {lists_count}")
         print(f"TOTAL SONGS: {len(self.total.scan()['Items'])}")
         print()
+
+    def get_total_list(self):
+        return self.total.scan()['Items']
 
     def get_query_string(self, query):
         query = {**query, "key": self.API_KEY}
@@ -121,6 +133,42 @@ class DB():
                     Item=row
                 )
 
+    def check_update_monthly(self):
+        playlists = self.get_playlists()
+        exist_list = [x['title'] for x in self.monthly.scan()['Items']]
+        new_list = [x for x in playlists if x['title'] not in exist_list]
+        if new_list:
+            print(f"FOUND new {len(new_list)} LIST")
+
+            new_lists_items = []
+            for each_list in new_list:
+                print(f"UPDATE {each_list['title']}")
+                list_items = self.get_playlist_items(each_list['id'])
+
+                row = {
+                    **each_list,
+                    "items": list_items
+                }
+                self.monthly.put_item(
+                    Item=row
+                )
+                print(f"DB MONTHLY UPDATED : {each_list['title']}")
+                new_list_items = [x for x in list_items if not self.check_exist(x)]
+                new_lists_items.extend(new_list_items)
+
+            if new_lists_items:
+                with self.total.batch_writer() as batch:
+                    for item in new_list_items:
+                        batch.put_item(
+                            Item=item
+                        )
+                print(f"DB TOTAL UPDATED : {len(new_lists_items)}")
+                return len(exist_list) + len(new_list), new_lists_items
+            return len(exist_list) + len(new_list), None
+        else:
+            print("NO new MONTHLY LIST")
+            return len(exist_list), None
+
     def get_monthly_list(self, list_name):
         res = self.monthly.scan(
             FilterExpression=Attr('title').eq(list_name)
@@ -177,6 +225,9 @@ class DB():
         self.update_song_in_monthly(monthly_id, song_id, update_values)
         self.update_song_in_total(song_id, update_values)
 
+    def check_exist(self, item):
+        return item['id'] in [x['id'] for x in self.total_list]
+
     def append_streamed(self, item):
         self.stream_list = [*self.stream_list, item]
         new_item = {
@@ -186,3 +237,8 @@ class DB():
         self.streamed.put_item(
             Item=new_item
         )
+        if not self.check_exist(item):
+            print("ADDED NEW IN TOTAL TABLE")
+            self.total.put_item(
+                Item=item
+            )

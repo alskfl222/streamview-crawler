@@ -23,7 +23,7 @@ class StreamviewServer():
 
         today = datetime.datetime.now()
         monthly_list_name = f'BGM {today.year} {today.month:0>2}'
-        print(monthly_list_name)
+        print(f"TODAY LIST : {monthly_list_name}")
 
         self.db = db.DB()
         self.original = self.db.get_monthly_list(monthly_list_name)

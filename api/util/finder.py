@@ -26,7 +26,7 @@ class Finder():
             print('init Finder first!')
             return
         try:
-            print(f"{self.video_base_url}{query}")
+            # print(f"{self.video_base_url}{query}")
             await self.page.goto(f"{self.video_base_url}{query}")
 
             retry = 0
