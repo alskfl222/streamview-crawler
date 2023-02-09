@@ -26,7 +26,7 @@ class StreamviewServer():
         print(f"TODAY LIST : {monthly_list_name}")
 
         self.db = db.DB()
-        self.original = self.db.get_monthly_list(monthly_list_name)
+        self.original = self.db.get_monthly_list_active(monthly_list_name)
         self.queue = [*self.original[:10]]
         self.finder = finder.Finder()
         self.bgm_active = True

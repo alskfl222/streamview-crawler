@@ -169,13 +169,14 @@ class DB():
             print("NO new MONTHLY LIST")
             return len(exist_list), None
 
-    def get_monthly_list(self, list_name):
+    def get_monthly_list_active(self, list_name):
         res = self.monthly.scan(
             FilterExpression=Attr('title').eq(list_name)
         )
         item = res['Items'][0]
         monthly_list = item['items']
-        return monthly_list
+        monthly_list_active = [x for x in monthly_list if x["active"]]
+        return monthly_list_active
 
     def get_item_index(self, id, items):
         for idx, item in enumerate(items):
