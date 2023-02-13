@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import datetime
-import os
 import traceback
+import os
+import datetime
+import random
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -27,7 +28,7 @@ class StreamviewServer():
 
         self.db = db.DB()
         self.original = self.db.get_monthly_list_active(monthly_list_name)
-        self.queue = [*self.original[:10]]
+        self.queue = [self.original[0], *random.choices(self.original, k=9)]
         self.finder = finder.Finder()
         self.bgm_active = True
 
@@ -37,12 +38,19 @@ class StreamviewServer():
 
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
+
             await websocket.accept()
             await self.init_list(websocket)
             await self.finder.init()
 
+
             while True:
-                raw = await websocket.receive_json()
+                try:
+                    raw = await websocket.receive_json()
+                except:
+                    print("WEBSOCKET CLOSED?")
+                    await self.finder.playwright.stop()
+                    return
                 ev_type = raw['event']['type']
                 ev_name = raw['event']['name']
                 data = raw['data']
@@ -50,8 +58,8 @@ class StreamviewServer():
                     if ev_type == 'bgm':
                         await bgm.handler(self, websocket, ev_name, data)
                 except:
+                    print("ERROR!")
                     traceback.print_exc()
-                    await websocket.send_json(f"error")
 
         app.add_middleware(
             CORSMiddleware,

@@ -52,7 +52,7 @@ class Finder():
                         "active": True,
                     }
                     return item
-                print(f'retry : {retry}')
+                print(f'retry : {retry + 1}')
                 retry += 1
             await self.page.goto(f"{self.search_base_url}{query}")
             items_el = self.page.locator('div#contents > ytd-video-renderer')

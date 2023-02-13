@@ -169,6 +169,15 @@ class DB():
         else:
             print("NO new MONTHLY LIST")
             return len(exist_list), None
+        
+    def get_last_streamed_song(self):
+        try:
+            last_streamed_list = self.streamed.scan(Limit=1)
+            last_streamed_song = last_streamed_list['Items'][-1]['items'][-1]
+            return last_streamed_song
+        except:
+            return None
+
 
     def get_monthly_list_active(self, list_name):
         res = self.monthly.scan(
@@ -177,7 +186,11 @@ class DB():
         item = res['Items'][0]
         monthly_list = item['items']
         monthly_list_active = [x for x in monthly_list if x["active"]]
-        return monthly_list_active
+        last_streamed_song = self.get_last_streamed_song()
+        if last_streamed_song:
+            return [last_streamed_song, *monthly_list_active]
+        else:
+            return monthly_list_active
 
     def get_item_index(self, id, items):
         for idx, item in enumerate(items):
@@ -231,7 +244,8 @@ class DB():
         return item['id'] in [x['id'] for x in self.total_list]
 
     def append_streamed(self, item):
-        self.stream_list = [*self.stream_list, item]
+        row = {**item, "time": f"{datetime.datetime.now():%Y-%m-%d_%H:%M:%S}"}
+        self.stream_list = [*self.stream_list, row]
         new_item = {
             "datetime": self.stream_time,
             "items": self.stream_list

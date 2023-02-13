@@ -44,16 +44,18 @@ async def pause_video(sv, ws: WebSocket, data):
 
 
 async def append_list(sv, ws: WebSocket, data):
-    print(f"ID: {data['query']}")
+    print(f"QUERY: {data['query']}")
     print(f"FROM: {data['from']}")
     insert_item = await sv.finder.find_song(data['query'])
-    requested_queue = [x for x in sv.queue if x['from'] != "list"]
+    requested_queue = [x for x in sv.queue[1:] if x['from'] != "list"]
+    rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
     if not insert_item or insert_item['id'] in [x['id'] for x in requested_queue]:
+        print(insert_item)
         print("DUPLICATED")
         await send_queue(sv, ws, 'duplicated')
     else:
         insert_item = {**insert_item, "from": data["from"]}
-        sv.queue = [sv.queue[0], insert_item, *sv.queue[1:-1]]
+        sv.queue = [sv.queue[0], *requested_queue, insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
         await send_queue(sv, ws, 'inserted')
 
