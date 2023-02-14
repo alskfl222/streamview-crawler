@@ -38,11 +38,9 @@ class StreamviewServer():
 
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
-
             await websocket.accept()
             await self.init_list(websocket)
             await self.finder.init()
-
 
             while True:
                 try:
