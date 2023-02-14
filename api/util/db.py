@@ -242,6 +242,7 @@ class DB():
 
     def append_streamed(self, item):
         row = {**item, "time": f"{datetime.datetime.now():%Y-%m-%d_%H:%M:%S}"}
+        del row['current']
         self.stream_list = [*self.stream_list, row]
         new_item = {
             "datetime": self.stream_time,
