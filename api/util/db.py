@@ -169,7 +169,7 @@ class DB():
         else:
             print("NO new MONTHLY LIST")
             return len(exist_list), None
-        
+
     def get_last_streamed_song(self):
         try:
             last_streamed_list = self.streamed.scan(Limit=1)
@@ -178,11 +178,8 @@ class DB():
         except:
             return None
 
-
-    def get_monthly_list_active(self, list_name):
-        res = self.monthly.scan(
-            FilterExpression=Attr('title').eq(list_name)
-        )
+    def get_monthly_list_active(self):
+        res = self.monthly.scan(Limit=1)
         item = res['Items'][0]
         monthly_list = item['items']
         monthly_list_active = [x for x in monthly_list if x["active"]]

@@ -13,7 +13,7 @@ class Finder():
 
     async def init(self):
         playwright = await async_playwright().start()
-        browser = await playwright.chromium.launch(headless=False)
+        browser = await playwright.chromium.launch()
         context = await browser.new_context()
         await context.route('**/*', lambda route: route.continue_())
         page = await context.new_page()
