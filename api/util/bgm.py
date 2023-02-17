@@ -4,9 +4,9 @@ from fastapi.websockets import WebSocket
 
 async def send_queue(sv, ws: WebSocket, message):
     res = {
-        "event": {
-            "type": 'bgm',
-            "name": "queue",
+        "session": {
+            "type": 'controller',
+            "event": "bgm.queue",
             "message": message
         },
         "data": {
@@ -66,8 +66,21 @@ async def append_list(sv, ws: WebSocket, data):
 async def update_inactive(sv, ws: WebSocket, data):
     print(data)
 
+async def add_new_session(sv, ws: WebSocket, session_type):
+    session_id = sv.sm.add_session(ws, session_type)
+    res = {
+        "event": {
+            "type": 'bgm',
+            "name": "session",
+        },
+        "data": {
+            "session_id": sv.queue
+        }
+    }
+    await ws.send_json(res)
 
-async def handler(sv, ws: WebSocket, ev_name, data):
+
+async def handler(sv, ws: WebSocket, session_type, ev_name, data):
     if ev_name == 'play':
         await play_video(sv, ws, data),
     if ev_name == 'stop':
@@ -78,3 +91,5 @@ async def handler(sv, ws: WebSocket, ev_name, data):
         await append_list(sv, ws, data),
     if ev_name == 'inactive':
         await update_inactive(sv, ws, data),
+    if ev_name == 'session':
+        await add_new_session(sv, ws, session_type)

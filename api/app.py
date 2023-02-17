@@ -30,11 +30,12 @@ class StreamviewServer():
         self.original = self.db.get_monthly_list_active()
         self.queue = [self.original[0], *random.choices(self.original, k=9)]
         self.finder = finder.Finder()
+        self.sm = session.SessionManager()
         self.bgm_active = True
 
         @app.get("/")
         async def get_index():
-            return "Hello World!"
+            return "qwerty"
 
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
@@ -45,16 +46,22 @@ class StreamviewServer():
             while True:
                 try:
                     raw = await websocket.receive_json()
+                    print(raw)
                 except:
                     print("WEBSOCKET CLOSED?")
                     await self.finder.playwright.stop()
                     return
-                ev_type = raw['event']['type']
-                ev_name = raw['event']['name']
-                data = raw['data']
+                session_type = raw['session']['type']
+                event = raw['session']['event'].split('.')
+                ev_type = event[0]
+                ev_name = event[1]
+                try:
+                    data = raw['data']
+                except:
+                    data = None
                 try:
                     if ev_type == 'bgm':
-                        await bgm.handler(self, websocket, ev_name, data)
+                        await bgm.handler(self, websocket, session_type, ev_name, data)
                 except:
                     print("ERROR!")
                     traceback.print_exc()
