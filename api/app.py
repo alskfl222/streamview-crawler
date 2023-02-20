@@ -45,7 +45,6 @@ class StreamviewServer():
 
             while True:
                 raw = await websocket.receive()
-                print("RAW", raw)
                 websocket_type = raw['type']
                 if websocket_type == 'websocket.disconnect':
                     self.sm.remove_session(websocket)
