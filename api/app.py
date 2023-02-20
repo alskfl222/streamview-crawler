@@ -43,7 +43,6 @@ class StreamviewServer():
             await self.init_list(websocket)
             await self.finder.init()
 
-
             while True:
                 raw = await websocket.receive()
                 print("RAW", raw)
@@ -53,7 +52,6 @@ class StreamviewServer():
                     return
                 
                 data = json.loads(raw['text'])
-                print("DATA", data)
                 session = data['session']
                 event = data['session']['event'].split('.')
                 ev_type = event[0]
