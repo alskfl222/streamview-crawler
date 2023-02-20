@@ -46,7 +46,8 @@ class StreamviewServer():
             try:
                 while True:
                     raw = await websocket.receive_json()
-                    session_type = raw['session']['type']
+                    # print("RAW", raw)
+                    session = raw['session']
                     event = raw['session']['event'].split('.')
                     ev_type = event[0]
                     ev_name = event[1]
@@ -56,13 +57,12 @@ class StreamviewServer():
                         data = None
                     try:
                         if ev_type == 'bgm':
-                            await bgm.handler(self, websocket, session_type, ev_name, data)
+                            await bgm.handler(self, websocket, session, ev_name, data)
                     except:
                         print("ERROR!")
                         traceback.print_exc()
             except:
                 print("CLOSE", raw)
-                self.sm.remove_session(raw['session']['id'])
                 return
 
         app.add_middleware(

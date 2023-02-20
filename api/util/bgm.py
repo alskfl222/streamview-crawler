@@ -82,7 +82,15 @@ async def add_new_session(sv, ws: WebSocket, session_type):
     await ws.send_json(res)
 
 
-async def handler(sv, ws: WebSocket, session_type, ev_name, data):
+async def manage_session(sv, ws: WebSocket, session):
+    if session['id']:
+        del sv.sm.sessions[session['id']]
+    else:
+        await add_new_session(sv, ws, session['type'])
+    
+
+
+async def handler(sv, ws: WebSocket, session, ev_name, data):
     if ev_name == 'play':
         await play_video(sv, ws, data),
     if ev_name == 'stop':
@@ -94,4 +102,4 @@ async def handler(sv, ws: WebSocket, session_type, ev_name, data):
     if ev_name == 'inactive':
         await update_inactive(sv, ws, data),
     if ev_name == 'session':
-        await add_new_session(sv, ws, session_type)
+        await manage_session(sv, ws, session)
