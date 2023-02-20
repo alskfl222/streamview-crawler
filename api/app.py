@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import traceback
 import os
 import datetime
 import random
+import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -43,27 +43,31 @@ class StreamviewServer():
             await self.init_list(websocket)
             await self.finder.init()
 
-            try:
-                while True:
-                    raw = await websocket.receive_json()
-                    # print("RAW", raw)
-                    session = raw['session']
-                    event = raw['session']['event'].split('.')
-                    ev_type = event[0]
-                    ev_name = event[1]
-                    try:
-                        data = raw['data']
-                    except:
-                        data = None
-                    try:
-                        if ev_type == 'bgm':
-                            await bgm.handler(self, websocket, session, ev_name, data)
-                    except:
-                        print("ERROR!")
-                        traceback.print_exc()
-            except:
-                print("CLOSE", raw)
-                return
+
+            while True:
+                raw = await websocket.receive()
+                print("RAW", raw)
+                websocket_type = raw['type']
+                if websocket_type == 'websocket.disconnect':
+                    self.sm.remove_session(websocket)
+                    return
+                
+                data = json.loads(raw['text'])
+                print("DATA", data)
+                session = data['session']
+                event = data['session']['event'].split('.')
+                ev_type = event[0]
+                ev_name = event[1]
+
+                try:
+                    ws_data = data['data']
+                except:
+                    ws_data = None
+
+                if ev_type == 'bgm':
+                    await bgm.handler(self, websocket, session, ev_name, ws_data)
+
+
 
         app.add_middleware(
             CORSMiddleware,
