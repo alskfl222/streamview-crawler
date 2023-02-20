@@ -43,28 +43,27 @@ class StreamviewServer():
             await self.init_list(websocket)
             await self.finder.init()
 
-            while True:
-                try:
+            try:
+                while True:
                     raw = await websocket.receive_json()
-                    print(raw)
-                except:
-                    print("WEBSOCKET CLOSED?")
-                    await self.finder.playwright.stop()
-                    return
-                session_type = raw['session']['type']
-                event = raw['session']['event'].split('.')
-                ev_type = event[0]
-                ev_name = event[1]
-                try:
-                    data = raw['data']
-                except:
-                    data = None
-                try:
-                    if ev_type == 'bgm':
-                        await bgm.handler(self, websocket, session_type, ev_name, data)
-                except:
-                    print("ERROR!")
-                    traceback.print_exc()
+                    session_type = raw['session']['type']
+                    event = raw['session']['event'].split('.')
+                    ev_type = event[0]
+                    ev_name = event[1]
+                    try:
+                        data = raw['data']
+                    except:
+                        data = None
+                    try:
+                        if ev_type == 'bgm':
+                            await bgm.handler(self, websocket, session_type, ev_name, data)
+                    except:
+                        print("ERROR!")
+                        traceback.print_exc()
+            except:
+                print("CLOSE", raw)
+                self.sm.remove_session(raw['session']['id'])
+                return
 
         app.add_middleware(
             CORSMiddleware,
@@ -78,9 +77,9 @@ class StreamviewServer():
 
     async def init_list(self, websocket: WebSocket):
         res = {
-            "event": {
-                "type": 'bgm',
-                "name": "queue"
+            "session": {
+                "type": 'all',
+                "event": "bgm.queue"
             },
             "data": {
                 "queue": self.queue

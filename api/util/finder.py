@@ -65,7 +65,8 @@ class Finder():
                 item_id = item_id_raw.split("=")[-1]
                 channel = await target_item.locator('div#channel-info div.ytd-channel-name a').text_content()
                 channel_id_raw = await target_item.locator('div#channel-info div.ytd-channel-name a').get_attribute('href')
-                channel_id = channel_id_raw[1:]
+                channel_id = channel_id_raw[1:] if channel_id_raw[0] == "@" else channel_id_raw.split(
+                    '/')[-1]
                 item = {
                     "title": item_title,
                     "id": item_id,
