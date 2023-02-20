@@ -1,3 +1,5 @@
+import math
+from datetime import datetime, timedelta
 from random import randint
 from fastapi.websockets import WebSocket
 
@@ -20,11 +22,41 @@ async def play_video(sv, ws: WebSocket, data):
     print(f"START VIDEO: {data}")
     if not sv.bgm_active:
         print("정지 후 재생")
+        sv.bgm_start_time = datetime.now(
+        ) - timedelta(seconds=float(data['current']))
         sv.bgm_active = True
     else:
         print("스트림 목록 업데이트")
+        sv.bgm_start_time = datetime.now()
         sv.db.append_streamed(data)
-    # await ws.send_json(data)
+    res = {
+        "session": {
+            "type": 'viewer',
+            "event": "bgm.current_time",
+        },
+        "data": {
+            "state": "start",
+            "current_time": data['current']
+        }
+    }
+    await sv.sm.emit_viewer(res)
+
+
+async def play_video_viewer(sv, ws: WebSocket, data):
+    print(f"VIEWER START VIDEO: {data}")
+    current_time = math.floor(
+        (datetime.now() - sv.bgm_start_time).total_seconds()) if sv.bgm_active else 0
+    res = {
+        "session": {
+            "type": 'viewer',
+            "event": "bgm.current_time",
+        },
+        "data": {
+            "state": "start",
+            "current_time": current_time
+        }
+    }
+    await sv.sm.emit_viewer(res)
 
 
 async def stop_video(sv, ws: WebSocket, data):
@@ -40,7 +72,32 @@ async def stop_video(sv, ws: WebSocket, data):
 async def pause_video(sv, ws: WebSocket, data):
     print(f"PAUSE VIDEO: {data}")
     sv.bgm_active = False
-    # await ws.send_json(data)
+    res = {
+        "session": {
+            "type": 'viewer',
+            "event": "bgm.current_time",
+        },
+        "data": {
+            "state": "pause",
+            "current_time": data['current']
+        }
+    }
+    await sv.sm.emit_viewer(res)
+
+
+async def buffering_video(sv, ws: WebSocket, data):
+    print(f"BUFFERING VIDEO: {data}")
+    res = {
+        "session": {
+            "type": 'viewer',
+            "event": "bgm.current_time",
+        },
+        "data": {
+            "state": "pause",
+            "current_time": data['current']
+        }
+    }
+    await sv.sm.emit_viewer(res)
 
 
 async def append_list(sv, ws: WebSocket, data):
@@ -87,16 +144,20 @@ async def manage_session(sv, ws: WebSocket, session):
         del sv.sm.sessions[session['id']]
     else:
         await add_new_session(sv, ws, session['type'])
-    
 
 
 async def handler(sv, ws: WebSocket, session, ev_name, data):
-    if ev_name == 'play':
+    print(f"SESSION TYPE : {session['type']}")
+    if ev_name == 'play' and session['type'] == 'controller':
         await play_video(sv, ws, data),
+    if ev_name == 'play' and session['type'] == 'viewer':
+        await play_video_viewer(sv, ws, data),
     if ev_name == 'stop':
         await stop_video(sv, ws, data),
     if ev_name == 'pause':
         await pause_video(sv, ws, data),
+    if ev_name == 'buffering':
+        await buffering_video(sv, ws, data),
     if ev_name == 'append':
         await append_list(sv, ws, data),
     if ev_name == 'inactive':

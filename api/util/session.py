@@ -61,3 +61,9 @@ class SessionManager():
                              for x in self.sessions.values() if x['type'] == 'stream']
         for websocket in websockets_stream:
             await websocket.send_json(data)
+
+    async def emit_viewer(self, data):
+        websockets_viewer = [x['websocket']
+                             for x in self.sessions.values() if x['type'] == 'viewer']
+        for websocket in websockets_viewer:
+            await websocket.send_json(data)

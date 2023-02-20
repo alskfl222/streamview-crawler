@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import os
-import datetime
+from datetime import datetime
 import random
 import json
 from fastapi import FastAPI
@@ -22,7 +22,7 @@ class StreamviewServer():
         app = FastAPI()
         app.mount("/static", StaticFiles(directory="static"), name="static")
 
-        today = datetime.datetime.now()
+        today = datetime.now()
         monthly_list_name = f'BGM {today.year} {today.month:0>2}'
         print(f"TODAY LIST : {monthly_list_name}")
 
@@ -32,6 +32,7 @@ class StreamviewServer():
         self.finder = finder.Finder()
         self.sm = session.SessionManager()
         self.bgm_active = True
+        self.bgm_start_time = datetime.now()
 
         @app.get("/")
         async def get_index():
@@ -63,8 +64,6 @@ class StreamviewServer():
 
                 if ev_type == 'bgm':
                     await bgm.handler(self, websocket, session, ev_name, ws_data)
-
-
 
         app.add_middleware(
             CORSMiddleware,
