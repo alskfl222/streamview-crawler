@@ -42,23 +42,6 @@ async def play_video(sv, ws: WebSocket, data):
     await sv.sm.emit_viewer(res)
 
 
-async def play_video_viewer(sv, ws: WebSocket, data):
-    print(f"VIEWER START VIDEO: {data}")
-    current_time = math.floor(
-        (datetime.now() - sv.bgm_start_time).total_seconds()) if sv.bgm_active else 0
-    res = {
-        "session": {
-            "type": 'viewer',
-            "event": "bgm.current_time",
-        },
-        "data": {
-            "state": "start",
-            "current_time": current_time
-        }
-    }
-    await sv.sm.emit_viewer(res)
-
-
 async def stop_video(sv, ws: WebSocket, data):
     print(f"STOP VIDEO: {data}")
     cand_list = [x for x in sv.original if x not in sv.queue]
@@ -146,21 +129,21 @@ async def manage_session(sv, ws: WebSocket, session):
         await add_new_session(sv, ws, session['type'])
 
 
-async def handler(sv, ws: WebSocket, session, ev_name, data):
+async def handler(sv, ws: WebSocket, data):
+    session = data['session']
+    ws_data = data['data'] if 'data' in data else None
     print(f"SESSION TYPE : {session['type']}")
-    if ev_name == 'play' and session['type'] == 'controller':
-        await play_video(sv, ws, data),
-    if ev_name == 'play' and session['type'] == 'viewer':
-        await play_video_viewer(sv, ws, data),
-    if ev_name == 'stop':
-        await stop_video(sv, ws, data),
-    if ev_name == 'pause':
-        await pause_video(sv, ws, data),
-    if ev_name == 'buffering':
-        await buffering_video(sv, ws, data),
-    if ev_name == 'append':
-        await append_list(sv, ws, data),
-    if ev_name == 'inactive':
-        await update_inactive(sv, ws, data),
-    if ev_name == 'session':
+    if session['event'].endswith('play'):
+        await play_video(sv, ws, ws_data),
+    if session['event'].endswith('stop'):
+        await stop_video(sv, ws, ws_data),
+    if session['event'].endswith('pause'):
+        await pause_video(sv, ws, ws_data),
+    if session['event'].endswith('buffering'):
+        await buffering_video(sv, ws, ws_data),
+    if session['event'].endswith('append'):
+        await append_list(sv, ws, ws_data),
+    if session['event'].endswith('inactive'):
+        await update_inactive(sv, ws, ws_data),
+    if session['event'].endswith('session'):
         await manage_session(sv, ws, session)

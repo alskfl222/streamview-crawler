@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket
 import uvicorn
 from dotenv import load_dotenv
-from util import *
+from module import *
 
 
 class StreamviewServer():
@@ -41,29 +41,27 @@ class StreamviewServer():
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             await websocket.accept()
-            await self.init_list(websocket)
             await self.finder.init()
 
             while True:
                 raw = await websocket.receive()
+                print(f"RAW : {raw}")
                 websocket_type = raw['type']
                 if websocket_type == 'websocket.disconnect':
-                    self.sm.remove_session(websocket)
-                    return
+                    try:
+                        self.sm.remove_session(websocket)
+                    finally:
+                        return
                 
                 data = json.loads(raw['text'])
-                session = data['session']
-                event = data['session']['event'].split('.')
-                ev_type = event[0]
-                ev_name = event[1]
+                if data['session']['type'] in ['controller', 'viewer']:
+                    await self.init_list(websocket)
+                event = data['session']['event']
 
-                try:
-                    ws_data = data['data']
-                except:
-                    ws_data = None
-
-                if ev_type == 'bgm':
-                    await bgm.handler(self, websocket, session, ev_name, ws_data)
+                if event.startswith('bgm'):
+                    await bgm.handler(self, websocket, data)
+                if event.startswith('obs'):
+                    await observer.handler(self, websocket, data)
 
         app.add_middleware(
             CORSMiddleware,

@@ -43,7 +43,6 @@ class SessionManager():
             session_id = [x[0] for x in self.sessions.items() if x[1]["websocket"] == websocket][0]
             session = self.sessions[session_id]
         except:
-            traceback.print_exc()
             return
         diff = datetime.now() - session['start_time']
         hour = str(diff).split(':')[0]
