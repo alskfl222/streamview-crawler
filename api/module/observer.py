@@ -1,31 +1,55 @@
 from fastapi.websockets import WebSocket
 
-
-async def add_new_session(sv, ws: WebSocket, session_type):
-    session_id = sv.sm.add_session(ws, session_type)
+async def send_queue(sv, message):
     res = {
         "session": {
             "type": 'all',
-            "event": "bgm.session",
+            "event": "bgm.queue",
+            "message": message
         },
         "data": {
-            "session_id": session_id
+            "queue": sv.queue
         }
     }
-    print(sv.sm.sessions)
-    await ws.send_json(res)
+    await sv.sm.emit_all(res)
 
+async def next_song(sv):
+    res = {
+        "session": {
+            "type": 'all',
+            "event": "obs.next",
+        },
+        "data": {
+            "song": sv.queue[1]
+        }
+    }
+    await sv.sm.emit_all(res)
 
-async def manage_session(sv, ws: WebSocket, session):
-    if session['id']:
-        del sv.sm.sessions[session['id']]
+async def append_list(sv, data):
+    print(f"QUERY: {data['query']}")
+    print(f"FROM: {data['from']}")
+    insert_item = await sv.finder.find_song(data['query'])
+    requested_queue = [x for x in sv.queue[1:] if x['from'] != "list"]
+    rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
+    if not insert_item:
+        print("CANNOT FOUND")
+        await send_queue(sv, 'not found')
+    elif insert_item['id'] in [x['id'] for x in requested_queue]:
+        print("DUPLICATED")
+        await send_queue(sv, 'duplicated')
     else:
-        await add_new_session(sv, ws, session['type'])
+        insert_item = {**insert_item, "from": data["from"]}
+        sv.queue = [sv.queue[0], *requested_queue,
+                    insert_item, *rest_queue][:10]
+        print(f"APPEND VIDEO: {insert_item}")
+        await send_queue(sv, 'inserted')
 
-
-async def handler(sv, ws: WebSocket, data):
+async def handler(sv, data):
     session = data['session']
     ws_data = data['data'] if 'data' in data else None
     print(f"SESSION TYPE : {session['type']}")
-    if session['event'].endswith('session'):
-        await manage_session(sv, ws, session)
+    print(f"DATA : {ws_data}")
+    if session['event'].endswith('next'):
+        await next_song(sv),
+    if session['event'].endswith('append'):
+        await append_list(sv, ws_data),

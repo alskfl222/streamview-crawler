@@ -61,7 +61,7 @@ class StreamviewServer():
                 if event.startswith('bgm'):
                     await bgm.handler(self, websocket, data)
                 if event.startswith('obs'):
-                    await observer.handler(self, websocket, data)
+                    await observer.handler(self, data)
 
         app.add_middleware(
             CORSMiddleware,

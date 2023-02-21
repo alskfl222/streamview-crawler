@@ -1,4 +1,5 @@
 import os
+import traceback
 import queue
 import json
 import websocket
@@ -23,7 +24,7 @@ def comsumer(q):
                     "event": f"obs.{command[0]}"
                 },
                 "data": {
-                    "query": command[1],
+                    "query": ' '.join(command[1]),
                     "from": 'chat'
                 }
             }
@@ -32,5 +33,5 @@ def comsumer(q):
         except queue.Empty:
             pass
         except:
-            print("QWER")
+            traceback.print_exc()
             break

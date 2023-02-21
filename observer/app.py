@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import os
-import signal
-from subprocess import call
-from multiprocessing import Queue, Process, freeze_support, active_children
-import time
+from multiprocessing import Queue, Process, active_children
 
 import pytchat
 
@@ -18,7 +14,8 @@ queue = Queue()
 sub_process = Process(target=comsumer, args=(queue,), daemon=True)
 
 command = {
-    '신청곡': 'append'
+    '신청곡': 'append',
+    '다음곡': 'next'
 }
 
 def handle_message(queue: Queue, message):
@@ -45,11 +42,7 @@ def main():
 
 
 if __name__ == "__main__":
-    # freeze_support()
     main()
-    print(active_children())
-    print(sub_process.pid)
-    print(sub_process.is_alive())
 
     for child in active_children():
         child.kill()
