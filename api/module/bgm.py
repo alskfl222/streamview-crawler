@@ -14,7 +14,7 @@ async def send_res(sv, data, message):
             "list_title": sv.db.latest_list['title'],
             "state": "start",
             "current_time": data['current'],
-            "duration": data['duration']
+            "duration": data['duration'] if 'duration' in data else '0'
         }
     }
     await sv.sm.emit_all(res)
