@@ -9,7 +9,8 @@ async def send_res(sv, data, message):
             "queue": sv.queue,
             "list_title": sv.db.latest_list['title'],
             "state": "start",
-            "current_time": data['current']
+            "current_time": data['current'],
+            "duration": data['duration']
         }
     }
     await sv.sm.emit_all(res)
@@ -17,14 +18,14 @@ async def send_res(sv, data, message):
 async def next_song(sv):
     res = {
         "event": {
-            "type": 'all',
+            "type": 'stream',
             "name": "obs.next",
         },
         "data": {
             "song": sv.queue[1]
         }
     }
-    await sv.sm.emit_all(res)
+    await sv.sm.emit_stream(res)
 
 async def append_list(sv, data):
     print(f"QUERY: {data['query']}")

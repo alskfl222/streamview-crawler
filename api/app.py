@@ -54,7 +54,7 @@ class StreamviewServer():
 
                 data = json.loads(raw['text'])
                 event_name = data['event']['name']
-                if data['event']['type'] in ['controller', 'viewer'] and event_name == 'bgm.session':
+                if data['event']['type'] in ['controller', 'viewer', 'stream'] and event_name == 'bgm.session':
                     await self.init_list(websocket)
 
                 if event_name.startswith('bgm'):
@@ -83,7 +83,8 @@ class StreamviewServer():
                 "queue": self.queue,
                 "list_title": self.db.latest_list['title'],
                 "state": "pause",
-                "current_time": "0"
+                "current_time": "0",
+                "duration": "0"
             }
         }
         await websocket.send_json(res)

@@ -13,7 +13,8 @@ async def send_res(sv, data, message):
             "queue": sv.queue,
             "list_title": sv.db.latest_list['title'],
             "state": "start",
-            "current_time": data['current']
+            "current_time": data['current'],
+            "duration": data['duration']
         }
     }
     await sv.sm.emit_all(res)
