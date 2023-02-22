@@ -1,23 +1,24 @@
-from fastapi.websockets import WebSocket
-
-async def send_queue(sv, message):
+async def send_res(sv, data, message):
     res = {
-        "session": {
+        "event": {
             "type": 'all',
-            "event": "bgm.queue",
+            "name": "bgm.queue",
             "message": message
         },
         "data": {
-            "queue": sv.queue
+            "queue": sv.queue,
+            "list_title": sv.db.latest_list['title'],
+            "state": "start",
+            "current_time": data['current']
         }
     }
     await sv.sm.emit_all(res)
 
 async def next_song(sv):
     res = {
-        "session": {
+        "event": {
             "type": 'all',
-            "event": "obs.next",
+            "name": "obs.next",
         },
         "data": {
             "song": sv.queue[1]
@@ -33,23 +34,23 @@ async def append_list(sv, data):
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
     if not insert_item:
         print("CANNOT FOUND")
-        await send_queue(sv, 'not found')
+        await send_res(sv, data, 'not found')
     elif insert_item['id'] in [x['id'] for x in requested_queue]:
         print("DUPLICATED")
-        await send_queue(sv, 'duplicated')
+        await send_res(sv, data, 'duplicated')
     else:
         insert_item = {**insert_item, "from": data["from"]}
         sv.queue = [sv.queue[0], *requested_queue,
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
-        await send_queue(sv, 'inserted')
+        await send_res(sv, data, 'inserted')
 
 async def handler(sv, data):
-    session = data['session']
+    event = data['event']
     ws_data = data['data'] if 'data' in data else None
-    print(f"SESSION TYPE : {session['type']}")
+    print(f"EVENT TYPE : {event['type']}")
     print(f"DATA : {ws_data}")
-    if session['event'].endswith('next'):
+    if event['name'].endswith('next'):
         await next_song(sv),
-    if session['event'].endswith('append'):
+    if event['name'].endswith('append'):
         await append_list(sv, ws_data),

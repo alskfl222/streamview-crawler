@@ -2,16 +2,18 @@ from random import randint
 from fastapi.websockets import WebSocket
 
 
-async def send_queue(sv, message):
+async def send_res(sv, data, message):
     res = {
-        "session": {
+        "event": {
             "type": 'all',
-            "event": "bgm.queue",
+            "name": "bgm.queue",
             "message": message
         },
         "data": {
             "queue": sv.queue,
-            "list_title": sv.db.latest_list['title']
+            "list_title": sv.db.latest_list['title'],
+            "state": "start",
+            "current_time": data['current']
         }
     }
     await sv.sm.emit_all(res)
@@ -25,18 +27,7 @@ async def play_video(sv, data):
     else:
         print("스트림 목록 업데이트")
         sv.db.append_streamed(data)
-    res = {
-        "session": {
-            "type": 'all',
-            "event": "bgm.current_time",
-        },
-        "data": {
-            "state": "start",
-            "current_time": data['current']
-        }
-    }
-    await send_queue(sv, 'queue')
-    await sv.sm.emit_all(res)
+    await send_res(sv, data, 'start')
 
 
 async def stop_video(sv, data):
@@ -46,38 +37,18 @@ async def stop_video(sv, data):
     print(f"NEW ITEM: {cand_list[new_idx]}")
     # TODO : 새로운 곡 추가
     sv.queue = [*sv.queue[1:], cand_list[new_idx]]
-    await send_queue(sv, 'stop')
+    await send_res(sv, data, 'stop')
 
 
 async def pause_video(sv, data):
     print(f"PAUSE VIDEO: {data}")
     sv.bgm_active = False
-    res = {
-        "session": {
-            "type": 'all',
-            "event": "bgm.current_time",
-        },
-        "data": {
-            "state": "pause",
-            "current_time": data['current']
-        }
-    }
-    await sv.sm.emit_all(res)
+    await send_res(sv, data, 'pause')
 
 
 async def buffering_video(sv, data):
     print(f"BUFFERING VIDEO: {data}")
-    res = {
-        "session": {
-            "type": 'all',
-            "event": "bgm.current_time",
-        },
-        "data": {
-            "state": "pause",
-            "current_time": data['current']
-        }
-    }
-    await sv.sm.emit_all(res)
+    await send_res(sv, data, 'buffering')
 
 
 async def append_list(sv, data):
@@ -88,22 +59,23 @@ async def append_list(sv, data):
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
     if not insert_item:
         print("CANNOT FOUND")
-        await send_queue(sv, 'not found')
+        await send_res(sv, data, 'not found')
     elif insert_item['id'] in [x['id'] for x in requested_queue]:
         print("DUPLICATED")
-        await send_queue(sv, 'duplicated')
+        await send_res(sv, data, 'duplicated')
     else:
         insert_item = {**insert_item, "from": data["from"]}
         sv.queue = [sv.queue[0], *requested_queue,
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
-        await send_queue(sv, 'inserted')
+        await send_res(sv, data, 'inserted')
+
 
 async def update_monthly_list(sv):
     print("UPDATE CHECK START")
     sv.db.check_update_monthly()
     sv.original = sv.db.get_monthly_list_active()
-    await send_queue(sv, 'update list')
+    await sv.sm.emit_all({'message': 'update list'})
 
 
 async def song_inactive(sv, ws: WebSocket, data):
@@ -113,9 +85,9 @@ async def song_inactive(sv, ws: WebSocket, data):
 async def add_new_session(sv, ws: WebSocket, session_type):
     session_id = sv.sm.add_session(ws, session_type)
     res = {
-        "session": {
-            "type": 'all',
-            "event": "bgm.session",
+        "event": {
+            "type": 'controller,viewer',
+            "name": "bgm.session",
         },
         "data": {
             "session_id": session_id
@@ -133,22 +105,22 @@ async def manage_session(sv, ws: WebSocket, session):
 
 
 async def handler(sv, ws: WebSocket, data):
-    session = data['session']
+    event = data['event']
     ws_data = data['data'] if 'data' in data else None
-    print(f"SESSION TYPE : {session['type']}")
-    if session['event'].endswith('play'):
+    print(f"event TYPE : {event['type']}")
+    if event['name'].endswith('play'):
         await play_video(sv, ws_data),
-    if session['event'].endswith('stop'):
+    if event['name'].endswith('stop'):
         await stop_video(sv, ws_data),
-    if session['event'].endswith('pause'):
+    if event['name'].endswith('pause'):
         await pause_video(sv, ws_data),
-    if session['event'].endswith('buffering'):
+    if event['name'].endswith('buffering'):
         await buffering_video(sv, ws_data),
-    if session['event'].endswith('append'):
+    if event['name'].endswith('append'):
         await append_list(sv, ws_data),
-    if session['event'].endswith('update'):
+    if event['name'].endswith('update'):
         await update_monthly_list(sv),
-    if session['event'].endswith('inactive'):
+    if event['name'].endswith('inactive'):
         await song_inactive(sv, ws, ws_data),
-    if session['event'].endswith('session'):
-        await manage_session(sv, ws, session)
+    if event['name'].endswith('session'):
+        await manage_session(sv, ws, event)

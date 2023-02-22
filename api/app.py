@@ -53,13 +53,13 @@ class StreamviewServer():
                         return
 
                 data = json.loads(raw['text'])
-                if data['session']['type'] in ['controller', 'viewer']:
+                event_name = data['event']['name']
+                if data['event']['type'] in ['controller', 'viewer'] and event_name == 'bgm.session':
                     await self.init_list(websocket)
-                event = data['session']['event']
 
-                if event.startswith('bgm'):
+                if event_name.startswith('bgm'):
                     await bgm.handler(self, websocket, data)
-                if event.startswith('obs'):
+                if event_name.startswith('obs'):
                     await observer.handler(self, data)
 
         app.add_middleware(
@@ -74,13 +74,16 @@ class StreamviewServer():
 
     async def init_list(self, websocket: WebSocket):
         res = {
-            "session": {
+            "event": {
                 "type": 'all',
-                "event": "bgm.queue"
+                "name": "bgm.queue",
+                "message": "init"
             },
             "data": {
                 "queue": self.queue,
-                "list_title": self.db.latest_list['title']
+                "list_title": self.db.latest_list['title'],
+                "state": "pause",
+                "current_time": "0"
             }
         }
         await websocket.send_json(res)
