@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import datetime
+from datetime import datetime, timezone
 import os
 import json
 import requests
@@ -15,7 +15,7 @@ class DB():
         load_dotenv()
         print()
         print("DB init")
-        self.stream_time = f"{datetime.datetime.now():%Y-%m-%d_%H:%M:%S}"
+        self.stream_time = f"{datetime.now(timezone.utc):%Y-%m-%d_%H:%M:%S}"
         self.API_KEY = os.getenv('YOUTUBE_API_KEY')
         print(f"INIT TIME : {self.stream_time}")
         print()
@@ -241,7 +241,7 @@ class DB():
         return item['id'] in [x['id'] for x in self.total_list]
 
     def append_streamed(self, item):
-        row = {**item, "time": f"{datetime.datetime.now():%Y-%m-%d_%H:%M:%S}"}
+        row = {**item, "time": f"{datetime.now(timezone.utc):%Y-%m-%d_%H:%M:%S}"}
         try:
             del row['current']
         except:
