@@ -32,7 +32,6 @@ class StreamviewServer():
         self.finder = finder.Finder()
         self.sm = session.SessionManager()
         self.bgm_active = True
-        self.bgm_start_time = datetime.now()
 
         @app.get("/")
         async def get_index():
@@ -52,7 +51,7 @@ class StreamviewServer():
                         self.sm.remove_session(websocket)
                     finally:
                         return
-                
+
                 data = json.loads(raw['text'])
                 if data['session']['type'] in ['controller', 'viewer']:
                     await self.init_list(websocket)
@@ -80,7 +79,8 @@ class StreamviewServer():
                 "event": "bgm.queue"
             },
             "data": {
-                "queue": self.queue
+                "queue": self.queue,
+                "list_title": self.db.latest_list['title']
             }
         }
         await websocket.send_json(res)

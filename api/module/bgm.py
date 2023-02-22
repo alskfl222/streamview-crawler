@@ -1,5 +1,3 @@
-import math
-from datetime import datetime, timedelta
 from random import randint
 from fastapi.websockets import WebSocket
 
@@ -12,7 +10,8 @@ async def send_queue(sv, message):
             "message": message
         },
         "data": {
-            "queue": sv.queue
+            "queue": sv.queue,
+            "list_title": sv.db.latest_list['title']
         }
     }
     await sv.sm.emit_all(res)
@@ -22,16 +21,13 @@ async def play_video(sv, data):
     print(f"START VIDEO: {data}")
     if not sv.bgm_active:
         print("정지 후 재생")
-        sv.bgm_start_time = datetime.now(
-        ) - timedelta(seconds=float(data['current']))
         sv.bgm_active = True
     else:
         print("스트림 목록 업데이트")
-        sv.bgm_start_time = datetime.now()
         sv.db.append_streamed(data)
     res = {
         "session": {
-            "type": 'viewer',
+            "type": 'all',
             "event": "bgm.current_time",
         },
         "data": {
@@ -40,7 +36,7 @@ async def play_video(sv, data):
         }
     }
     await send_queue(sv, 'queue')
-    await sv.sm.emit_viewer(res)
+    await sv.sm.emit_all(res)
 
 
 async def stop_video(sv, data):
@@ -58,7 +54,7 @@ async def pause_video(sv, data):
     sv.bgm_active = False
     res = {
         "session": {
-            "type": 'viewer',
+            "type": 'all',
             "event": "bgm.current_time",
         },
         "data": {
@@ -66,14 +62,14 @@ async def pause_video(sv, data):
             "current_time": data['current']
         }
     }
-    await sv.sm.emit_viewer(res)
+    await sv.sm.emit_all(res)
 
 
 async def buffering_video(sv, data):
     print(f"BUFFERING VIDEO: {data}")
     res = {
         "session": {
-            "type": 'viewer',
+            "type": 'all',
             "event": "bgm.current_time",
         },
         "data": {
@@ -81,7 +77,7 @@ async def buffering_video(sv, data):
             "current_time": data['current']
         }
     }
-    await sv.sm.emit_viewer(res)
+    await sv.sm.emit_all(res)
 
 
 async def append_list(sv, data):
@@ -103,8 +99,14 @@ async def append_list(sv, data):
         print(f"APPEND VIDEO: {insert_item}")
         await send_queue(sv, 'inserted')
 
+async def update_monthly_list(sv):
+    print("UPDATE CHECK START")
+    sv.db.check_update_monthly()
+    sv.original = sv.db.get_monthly_list_active()
+    await send_queue(sv, 'update list')
 
-async def update_inactive(sv, ws: WebSocket, data):
+
+async def song_inactive(sv, ws: WebSocket, data):
     print(data)
 
 
@@ -144,7 +146,9 @@ async def handler(sv, ws: WebSocket, data):
         await buffering_video(sv, ws_data),
     if session['event'].endswith('append'):
         await append_list(sv, ws_data),
+    if session['event'].endswith('update'):
+        await update_monthly_list(sv),
     if session['event'].endswith('inactive'):
-        await update_inactive(sv, ws, ws_data),
+        await song_inactive(sv, ws, ws_data),
     if session['event'].endswith('session'):
         await manage_session(sv, ws, session)

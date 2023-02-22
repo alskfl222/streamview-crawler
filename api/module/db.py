@@ -22,14 +22,12 @@ class DB():
         self.dynamodb = boto3.resource('dynamodb')
         self.total = self.dynamodb.Table('total')
         self.monthly = self.dynamodb.Table('monthly')
-        self.streamed = self.dynamodb.Table('streamed')
+        self.stream = self.dynamodb.Table('stream')
 
         self.total_list = self.get_total_list()
         lists_count, new_total_list = self.check_update_monthly()
         if new_total_list:
             self.total_list = new_total_list
-
-        self.stream_list = []
 
         print()
         print(f"TOTAL LISTS: {lists_count}")
@@ -135,6 +133,8 @@ class DB():
 
     def check_update_monthly(self):
         playlists = self.get_playlists()
+        self.latest_list = playlists[-1]
+        print(f"LATEST LIST : {self.latest_list['title']}")
         exist_list = [x['title'] for x in self.monthly.scan()['Items']]
         new_list = [x for x in playlists if x['title'] not in exist_list]
         if new_list:
@@ -172,14 +172,14 @@ class DB():
 
     def get_last_streamed_song(self):
         try:
-            last_streamed_list = self.streamed.scan(Limit=1)
-            last_streamed_song = last_streamed_list['Items'][-1]['items'][-1]
+            last_streamed_song = self.stream.scan(Limit=1)['Items'][-1]
             return last_streamed_song
         except:
             return None
 
     def get_monthly_list_active(self):
-        res = self.monthly.scan(Limit=1)
+        res = self.monthly.scan(FilterExpression=Attr(
+            'title').eq(self.latest_list['title']))
         item = res['Items'][0]
         monthly_list = item['items']
         monthly_list_active = [x for x in monthly_list if x["active"]]
@@ -246,13 +246,9 @@ class DB():
             del row['current']
         except:
             pass
-        self.stream_list = [*self.stream_list, row]
-        new_item = {
-            "datetime": self.stream_time,
-            "items": self.stream_list
-        }
-        self.streamed.put_item(
-            Item=new_item
+
+        self.stream.put_item(
+            Item=row
         )
         if not self.check_exist(item):
             print("ADDED NEW IN TOTAL TABLE")
