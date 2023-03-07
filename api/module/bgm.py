@@ -1,23 +1,7 @@
 from random import randint
 from fastapi.websockets import WebSocket
 
-
-async def send_res(sv, data, message):
-    res = {
-        "event": {
-            "type": 'all',
-            "name": "bgm.queue",
-            "message": message
-        },
-        "data": {
-            "queue": sv.queue,
-            "list_title": sv.db.latest_list['title'],
-            "state": "start",
-            "current_time": data['current'],
-            "duration": data['duration'] if 'duration' in data else '0'
-        }
-    }
-    await sv.sm.emit_all(res)
+from .common import send_res
 
 
 async def play_video(sv, data):
@@ -98,11 +82,11 @@ async def add_new_session(sv, ws: WebSocket, session_type):
     await ws.send_json(res)
 
 
-async def manage_session(sv, ws: WebSocket, session):
-    if session['id']:
-        del sv.sm.sessions[session['id']]
+async def manage_session(sv, ws: WebSocket, event):
+    if event['id']:
+        del sv.sm.sessions[event['id']]
     else:
-        await add_new_session(sv, ws, session['type'])
+        await add_new_session(sv, ws, event['type'])
 
 
 async def handler(sv, ws: WebSocket, data):
@@ -123,5 +107,5 @@ async def handler(sv, ws: WebSocket, data):
         await update_monthly_list(sv),
     if event['name'].endswith('inactive'):
         await song_inactive(sv, ws, ws_data),
-    if event['name'].endswith('session'):
-        await manage_session(sv, ws, event)
+    # if event['name'].endswith('session'):
+    #     await manage_session(sv, ws, event)

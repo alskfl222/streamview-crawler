@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+from subprocess import Popen, PIPE
 from datetime import datetime
 import random
 import json
@@ -9,10 +10,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket
+from pydantic import BaseModel
 import uvicorn
 from dotenv import load_dotenv
 from module import *
 
+class Item(BaseModel):
+    streamId: str
 
 class StreamviewServer():
     def __init__(self):
@@ -28,14 +32,23 @@ class StreamviewServer():
 
         self.db = db.DB()
         self.original = self.db.get_monthly_list_active()
-        self.queue = [self.original[0], *random.choices(self.original, k=9)]
+        self.queue = [self.original[0], *random.sample(self.original, k=9)]
         self.finder = finder.Finder()
         self.sm = session.SessionManager()
+        self.sub_process = None
         self.bgm_active = True
 
         @app.get("/")
         async def get_index():
             return "qwerty"
+
+        @app.post("/observer")
+        async def init_observer(item: Item):
+            print("INIT OBSERVER")
+            command = ["python", "observer.py", item.streamId]
+            self.sub_process = Popen(command, preexec_fn=lambda: os.setpgrp(),
+                          stdout=PIPE, stderr=PIPE)
+            return "OK"
 
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
@@ -56,6 +69,8 @@ class StreamviewServer():
                 event_name = data['event']['name']
                 if data['event']['type'] in ['controller', 'viewer', 'stream'] and event_name == 'bgm.session':
                     await self.init_list(websocket)
+                    await bgm.manage_session(self, websocket, data['event'])
+                    continue
 
                 if event_name.startswith('bgm'):
                     await bgm.handler(self, websocket, data)
@@ -89,5 +104,5 @@ class StreamviewServer():
         }
         await websocket.send_json(res)
 
-
-StreamviewServer()
+if __name__ == '__main__':
+    server = StreamviewServer()

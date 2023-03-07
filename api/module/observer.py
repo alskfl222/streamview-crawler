@@ -1,31 +1,4 @@
-async def send_res(sv, data, message):
-    res = {
-        "event": {
-            "type": 'all',
-            "name": "bgm.queue",
-            "message": message
-        },
-        "data": {
-            "queue": sv.queue,
-            "list_title": sv.db.latest_list['title'],
-            "state": "start",
-            "current_time": data['current'],
-            "duration": data['duration']
-        }
-    }
-    await sv.sm.emit_all(res)
-
-async def next_song(sv):
-    res = {
-        "event": {
-            "type": 'stream',
-            "name": "obs.next",
-        },
-        "data": {
-            "song": sv.queue[1]
-        }
-    }
-    await sv.sm.emit_stream(res)
+from .common import send_res
 
 async def append_list(sv, data):
     print(f"QUERY: {data['query']}")
@@ -46,12 +19,24 @@ async def append_list(sv, data):
         print(f"APPEND VIDEO: {insert_item}")
         await send_res(sv, data, 'inserted')
 
+async def next_song(sv):
+    res = {
+        "event": {
+            "type": 'stream',
+            "name": "obs.next",
+        },
+        "data": {
+            "song": sv.queue[1]
+        }
+    }
+    await sv.sm.emit_stream(res)
+
 async def handler(sv, data):
     event = data['event']
     ws_data = data['data'] if 'data' in data else None
-    print(f"EVENT TYPE : {event['type']}")
+    print(f"EVENT : {event}")
     print(f"DATA : {ws_data}")
-    if event['name'].endswith('next'):
-        await next_song(sv),
     if event['name'].endswith('append'):
-        await append_list(sv, ws_data),
+        await append_list(sv, ws_data)
+    if event['name'].endswith('next'):
+        await next_song(sv)
