@@ -75,7 +75,7 @@ async def add_new_session(sv, ws: WebSocket, session_type):
             "name": "bgm.session",
         },
         "data": {
-            "session_id": session_id
+            "sessionId": session_id
         }
     }
     print(sv.sm.sessions)

@@ -58,7 +58,7 @@ class Observer():
                     print(
                         f"{item.datetime} : {item.author.name} [{item.author.isChatOwner}] - {item.message}")
                     command, args = self.handle_message(item.message)
-                    if command and args:
+                    if command:
                         self.send_ws(command, args)
             except:
                 traceback.print_exc()
