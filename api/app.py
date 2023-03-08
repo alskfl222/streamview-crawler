@@ -16,8 +16,10 @@ import uvicorn
 from dotenv import load_dotenv
 from module import *
 
+
 class Item(BaseModel):
     streamId: str
+
 
 class StreamviewServer():
     def __init__(self):
@@ -46,31 +48,31 @@ class StreamviewServer():
         @app.post("/observer")
         async def init_observer(item: Item):
             if self.sub_process:
-              self.sub_process.kill()
+                self.sub_process.kill()
             command = ["python3", "observer.py", item.streamId]
             print(f"INIT OBSERVER : {item.streamId}")
             print(f"COMMAND : {command}")
             print(f"WS SERVER URL : {os.getenv('WS_SERVER_CLOUD')}")
             self.sub_process = Popen(command, preexec_fn=lambda: os.setpgrp(),
-                          stdout=PIPE, stderr=PIPE)
+                                     stdout=PIPE, stderr=PIPE)
             time.sleep(3)
             return self.sub_process.poll()
-            
-        @app.get("/observer/alive")
+
+        @app.post("/observer/alive")
         async def check_observer():
             if self.sub_process:
-              return self.sub_process.poll()
+                return self.sub_process.poll()
             else:
-              return "No sub_process"
-              
-        @app.get("/observer/stop")
+                return "No sub_process"
+
+        @app.post("/observer/stop")
         async def stop_observer():
             if self.sub_process:
-              self.sub_process.kill()
-              stdout, stderr = self.sub_process.communicate()
-              return { "stdout": stdout, "stderr": stderr }
+                self.sub_process.kill()
+                stdout, stderr = self.sub_process.communicate()
+                return {"stdout": stdout, "stderr": stderr}
             else:
-              return "No sub_process"
+                return "No sub_process"
 
         @app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
@@ -125,6 +127,7 @@ class StreamviewServer():
             }
         }
         await websocket.send_json(res)
+
 
 if __name__ == '__main__':
     server = StreamviewServer()
