@@ -20,7 +20,6 @@ async def stop_video(sv, data):
     cand_list = [x for x in sv.original if x not in sv.queue]
     new_idx = randint(0, len(cand_list) - 1)
     print(f"NEW ITEM: {cand_list[new_idx]}")
-    # TODO : 새로운 곡 추가
     sv.queue = [*sv.queue[1:], cand_list[new_idx]]
     await send_res(sv, data, 'stop')
 
@@ -54,6 +53,16 @@ async def append_list(sv, data):
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
         await send_res(sv, data, 'inserted')
+
+
+async def delete_queue(sv, data):
+    print(f"DELETE VIDEO: {sv.queue[data['idx']]}")
+    cand_list = [x for x in sv.original if x not in sv.queue]
+    new_idx = randint(0, len(cand_list) - 1)
+    print(f"NEW ITEM: {cand_list[new_idx]}")
+    sv.queue = [*sv.queue[0:data['idx']], *
+                sv.queue[data['idx']+1:], cand_list[new_idx]]
+    await send_res(sv, data, 'deleted')
 
 
 async def update_monthly_list(sv):
@@ -103,6 +112,8 @@ async def handler(sv, ws: WebSocket, data):
         await buffering_video(sv, ws_data),
     if event['name'].endswith('append'):
         await append_list(sv, ws_data),
+    if event['name'].endswith('delete'):
+        await delete_queue(sv, ws_data)
     if event['name'].endswith('update'):
         await update_monthly_list(sv),
     if event['name'].endswith('inactive'):
