@@ -69,8 +69,9 @@ class StreamviewServer():
         async def stop_observer():
             if self.sub_process:
                 self.sub_process.kill()
-                stdout, stderr = self.sub_process.communicate()
-                return {"stdout": stdout, "stderr": stderr}
+                # stdout, stderr = self.sub_process.communicate()
+                # return {"stdout": stdout, "stderr": stderr}
+                return self.sub_process.poll()
             else:
                 return "No sub_process"
 
