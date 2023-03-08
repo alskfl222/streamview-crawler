@@ -68,5 +68,9 @@ class Observer():
 
 if __name__ == '__main__':
     stream_id = sys.argv[1]
-    observer = Observer(stream_id)
-    observer.run()
+    try:
+        observer = Observer(stream_id)
+        observer.run()
+    except:
+        traceback.print_exc()
+        sys.exit(0)

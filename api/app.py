@@ -3,6 +3,7 @@
 
 import os
 from subprocess import Popen, PIPE
+import time
 from datetime import datetime
 import random
 import json
@@ -44,14 +45,16 @@ class StreamviewServer():
 
         @app.post("/observer")
         async def init_observer(item: Item):
+            if self.sub_process:
+              self.sub_process.kill()
             command = ["python3", "observer.py", item.streamId]
             print(f"INIT OBSERVER : {item.streamId}")
             print(f"COMMAND : {command}")
             print(f"WS SERVER URL : {os.getenv('WS_SERVER_CLOUD')}")
             self.sub_process = Popen(command, preexec_fn=lambda: os.setpgrp(),
                           stdout=PIPE, stderr=PIPE)
-            print(self.sub_process.poll())
-            return "OK"
+            time.sleep(3)
+            return self.sub_process.poll()
             
         @app.get("/observer/alive")
         async def check_observer():
