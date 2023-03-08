@@ -11,8 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-os.environ["PYTHONUNBUFFERED"] = "1"
-WS_SERVER = os.getenv('WS_SERVER_LOCAL')
+WS_SERVER = os.getenv("WS_SERVER_CLOUD")
 
 
 class Observer():
