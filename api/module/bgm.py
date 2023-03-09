@@ -2,7 +2,7 @@ from random import randint
 from datetime import datetime
 from fastapi.websockets import WebSocket
 
-from .common import send_res
+from .common import arrange_bgm, send_res
 
 
 async def play_video(sv, data):
@@ -13,9 +13,9 @@ async def play_video(sv, data):
     else:
         print("스트림 목록 업데이트")
         sv.db.append_streamed(data)
-        sv.bgm['current_time'] = datetime.now() - sv.bgm['start_time']
-        print(sv.bgm['current_time'])
-    await send_res(sv, data, 'start')
+        sv.bgm['currentTime'] = data
+        print(sv.bgm['currentTime'])
+    await send_res(sv, 'start')
 
 
 async def stop_video(sv, data):
@@ -24,18 +24,36 @@ async def stop_video(sv, data):
     new_idx = randint(0, len(cand_list) - 1)
     print(f"NEW ITEM: {cand_list[new_idx]}")
     sv.queue = [*sv.queue[1:], cand_list[new_idx]]
-    await send_res(sv, data, 'stop')
+    sv.bgm = {
+        **sv.bgm,
+        "startTime": datetime.now(),
+        "currentTime": 0,
+        "duration": 0
+    }
+    await send_res(sv, 'stop')
 
 
 async def pause_video(sv, data):
     print(f"PAUSE VIDEO: {data}")
     sv.bgm_active = False
-    await send_res(sv, data, 'pause')
+    sv.bgm = {
+        **sv.bgm,
+        "startTime": datetime.now(),
+        "currentTime": 0,
+        "duration": 0
+    }
+    await send_res(sv, 'pause')
 
 
 async def buffering_video(sv, data):
     print(f"BUFFERING VIDEO: {data}")
-    await send_res(sv, data, 'buffering')
+    sv.bgm = {
+        **sv.bgm,
+        "startTime": datetime.now(),
+        "currentTime": 0,
+        "duration": 0
+    }
+    await send_res(sv, 'buffering')
 
 
 async def append_list(sv, data):
@@ -46,16 +64,16 @@ async def append_list(sv, data):
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
     if not insert_item:
         print("CANNOT FOUND")
-        await send_res(sv, data, 'not found')
+        await send_res(sv, 'not found')
     elif insert_item['id'] in [x['id'] for x in requested_queue]:
         print("DUPLICATED")
-        await send_res(sv, data, 'duplicated')
+        await send_res(sv, 'duplicated')
     else:
         insert_item = {**insert_item, "from": data["from"]}
         sv.queue = [sv.queue[0], *requested_queue,
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
-        await send_res(sv, data, 'inserted')
+        await send_res(sv, 'inserted')
 
 
 async def delete_queue(sv, data):
@@ -65,7 +83,7 @@ async def delete_queue(sv, data):
     print(f"NEW ITEM: {cand_list[new_idx]}")
     sv.queue = [*sv.queue[0:data['idx']], *
                 sv.queue[data['idx']+1:], cand_list[new_idx]]
-    await send_res(sv, data, 'deleted')
+    await send_res(sv, 'deleted')
 
 
 async def update_monthly_list(sv):

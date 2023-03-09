@@ -1,4 +1,14 @@
-async def send_res(sv, data, message):
+from datetime import datetime
+
+def arrange_bgm(sv):
+    sv.bgm = {
+        **sv.bgm,
+        "startTime": datetime.now(),
+        "currentTime": 0,
+        "duration": 0
+    }
+
+async def send_res(sv, message):
     res = {
         "event": {
             "to": 'all',
@@ -6,13 +16,9 @@ async def send_res(sv, data, message):
             "message": message
         },
         "data": {
-            **data,
             "queue": sv.queue,
             "listTitle": sv.db.latest_list['title'],
             "bgm": sv.bgm
-            # "active": sv.bgm_active,
-            # "currentTime": data['current'] if 'current' in data else '0',
-            # "duration": data['duration'] if 'duration' in data else '0'
         }
     }
     await sv.sm.emit_all(res)
