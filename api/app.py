@@ -39,7 +39,12 @@ class StreamviewServer():
         self.finder = finder.Finder()
         self.sm = session.SessionManager()
         self.sub_process = None
-        self.bgm_active = False
+        self.bgm = {
+            "active": False,
+            "start_time": datetime.now(),
+            "current_time": 0,
+            "duration": 0
+        }
 
         @app.get("/")
         async def get_index():
@@ -125,10 +130,7 @@ class StreamviewServer():
             "data": {
                 "queue": self.queue,
                 "listTitle": self.db.latest_list['title'],
-                "active": self.bgm_active,
-                "available": True,
-                "currentTime": "0",
-                "duration": "0"
+                "bgm": self.bgm,
             }
         }
         await websocket.send_json(res)

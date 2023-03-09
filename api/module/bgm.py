@@ -1,4 +1,5 @@
 from random import randint
+from datetime import datetime
 from fastapi.websockets import WebSocket
 
 from .common import send_res
@@ -12,6 +13,8 @@ async def play_video(sv, data):
     else:
         print("스트림 목록 업데이트")
         sv.db.append_streamed(data)
+        sv.bgm['current_time'] = datetime.now() - sv.bgm['start_time']
+        print(sv.bgm['current_time'])
     await send_res(sv, data, 'start')
 
 

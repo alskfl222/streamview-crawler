@@ -9,10 +9,10 @@ async def send_res(sv, data, message):
             **data,
             "queue": sv.queue,
             "listTitle": sv.db.latest_list['title'],
-            "active": sv.bgm_active,
-            "available": True,
-            "currentTime": data['current'] if 'current' in data else '0',
-            "duration": data['duration'] if 'duration' in data else '0'
+            "bgm": sv.bgm
+            # "active": sv.bgm_active,
+            # "currentTime": data['current'] if 'current' in data else '0',
+            # "duration": data['duration'] if 'duration' in data else '0'
         }
     }
     await sv.sm.emit_all(res)
