@@ -10,7 +10,7 @@ def update_bgm(sv, data):
     sv.bgm = {
         **sv.bgm,
         "updateTime": datetime.now(),
-        "currentTime": float(data['current']) if 'current' in data else 0,
+        "currentTime": float(data['current']) if 'current' in data else sv.bgm['currentTime'],
         "duration": float(data['duration']) if 'current' in data else sv.bgm['duration']
     }
 
