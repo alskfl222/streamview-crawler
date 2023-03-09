@@ -30,12 +30,8 @@ async def stop_video(sv, data):
 
 async def pause_video(sv, data):
     print(f"PAUSE VIDEO: {data}")
-    sv.bgm = {
-        **sv.bgm,
-        "active": False,
-        "currentTime": 0,
-        "duration": 0
-    }
+    sv.bgm["active"] = False
+    update_bgm(sv, data)
     await send_res(sv, 'pause')
 
 
