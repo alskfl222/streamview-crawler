@@ -7,9 +7,9 @@ from .common import update_bgm, send_res
 
 async def play_video(sv, data):
     print(f"START VIDEO: {data}")
-    if not sv.bgm_active:
+    if not sv.bgm['active']:
         print("정지 후 재생")
-        sv.bgm_active = True
+        sv.bgm['active'] = True
     else:
         print("스트림 목록 업데이트")
         sv.db.append_streamed(data)
