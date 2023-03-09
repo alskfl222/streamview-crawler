@@ -39,7 +39,7 @@ class StreamviewServer():
         self.finder = finder.Finder()
         self.sm = session.SessionManager()
         self.sub_process = None
-        self.bgm_active = True
+        self.bgm_active = False
 
         @app.get("/")
         async def get_index():
