@@ -94,7 +94,7 @@ class StreamviewServer():
                 event_name = data['event']['name']
                 if data['event']['from'] in ['controller', 'viewer', 'stream'] and event_name == 'session':
                     await self.init_list(websocket)
-                    await common.send_res(self, {})
+                    await common.send_res(self, {}, 'init')
                     session_id = self.sm.add_session(
                         websocket, data['event']['from'])
                     await websocket.send_json({"event": {"to": data['event']['from'], "name": "session"}, "data": {
