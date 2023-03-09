@@ -1,12 +1,10 @@
-from datetime import datetime
-
-def arrange_bgm(sv):
+def update_bgm(sv, data):
     sv.bgm = {
         **sv.bgm,
-        "startTime": datetime.now(),
-        "currentTime": 0,
-        "duration": 0
+        "currentTime": float(data['current']) if 'current' in data else 0,
+        "duration": float(data['duration']) if 'current' in data else 0
     }
+
 
 async def send_res(sv, message):
     res = {
@@ -18,7 +16,9 @@ async def send_res(sv, message):
         "data": {
             "queue": sv.queue,
             "listTitle": sv.db.latest_list['title'],
-            "bgm": sv.bgm
+            "bgm": {
+                **sv.bgm,
+                "startTime": f"{sv.bgm['startTime']}"}
         }
     }
     await sv.sm.emit_all(res)

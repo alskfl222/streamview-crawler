@@ -2,7 +2,7 @@ from random import randint
 from datetime import datetime
 from fastapi.websockets import WebSocket
 
-from .common import arrange_bgm, send_res
+from .common import update_bgm, send_res
 
 
 async def play_video(sv, data):
@@ -13,8 +13,7 @@ async def play_video(sv, data):
     else:
         print("스트림 목록 업데이트")
         sv.db.append_streamed(data)
-        sv.bgm['currentTime'] = data
-        print(sv.bgm['currentTime'])
+    update_bgm(sv, data)
     await send_res(sv, 'start')
 
 
@@ -24,12 +23,8 @@ async def stop_video(sv, data):
     new_idx = randint(0, len(cand_list) - 1)
     print(f"NEW ITEM: {cand_list[new_idx]}")
     sv.queue = [*sv.queue[1:], cand_list[new_idx]]
-    sv.bgm = {
-        **sv.bgm,
-        "startTime": datetime.now(),
-        "currentTime": 0,
-        "duration": 0
-    }
+    sv.bgm['startTime'] = datetime.now()
+    update_bgm(sv, data)
     await send_res(sv, 'stop')
 
 
@@ -47,12 +42,7 @@ async def pause_video(sv, data):
 
 async def buffering_video(sv, data):
     print(f"BUFFERING VIDEO: {data}")
-    sv.bgm = {
-        **sv.bgm,
-        "startTime": datetime.now(),
-        "currentTime": 0,
-        "duration": 0
-    }
+    update_bgm(sv, data)
     await send_res(sv, 'buffering')
 
 
@@ -62,6 +52,7 @@ async def append_list(sv, data):
     insert_item = await sv.finder.find_song(data['query'])
     requested_queue = [x for x in sv.queue[1:] if x['from'] != "list"]
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
+    update_bgm()
     if not insert_item:
         print("CANNOT FOUND")
         await send_res(sv, 'not found')
@@ -83,6 +74,7 @@ async def delete_queue(sv, data):
     print(f"NEW ITEM: {cand_list[new_idx]}")
     sv.queue = [*sv.queue[0:data['idx']], *
                 sv.queue[data['idx']+1:], cand_list[new_idx]]
+    update_bgm()
     await send_res(sv, 'deleted')
 
 
