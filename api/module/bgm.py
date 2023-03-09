@@ -79,7 +79,7 @@ async def song_inactive(sv, ws: WebSocket, data):
 async def handler(sv, ws: WebSocket, data):
     event = data['event']
     ws_data = data['data'] if 'data' in data else None
-    print(f"event TYPE : {event['type']}")
+    print(f"event FROM : {event['from']}")
     if event['name'].endswith('play'):
         await play_video(sv, ws_data),
     if event['name'].endswith('stop'):
