@@ -130,7 +130,7 @@ class StreamviewServer():
             "data": {
                 "queue": self.queue,
                 "listTitle": self.db.latest_list['title'],
-                "bgm": {**self.bgm, "start_time": datetime.strptime(self.bgm['start_time'])},
+                "bgm": {**self.bgm, "start_time": f"{self.bgm['start_time']}"},
             }
         }
         await websocket.send_json(res)
