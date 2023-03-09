@@ -8,8 +8,9 @@ async def send_res(sv, data, message):
         "data": {
             **data,
             "queue": sv.queue,
-            "list_title": sv.db.latest_list['title'],
+            "listTitle": sv.db.latest_list['title'],
             "active": sv.bgm_active,
+            "available": True,
             "currentTime": data['current'] if 'current' in data else '0',
             "duration": data['duration'] if 'duration' in data else '0'
         }
