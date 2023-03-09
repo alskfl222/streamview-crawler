@@ -69,7 +69,7 @@ async def delete_queue(sv, data):
     print(f"NEW ITEM: {cand_list[new_idx]}")
     sv.queue = [*sv.queue[0:data['idx']], *
                 sv.queue[data['idx']+1:], cand_list[new_idx]]
-    update_bgm()
+    update_bgm(sv, data)
     await send_res(sv, 'deleted')
 
 
