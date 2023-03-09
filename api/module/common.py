@@ -2,8 +2,11 @@ from datetime import datetime
 
 
 def get_current_time(sv):
-    print(sv.bgm['currentTime'])
-    return round(float((datetime.now() - sv.bgm['updateTime']).total_seconds()), 3) + sv.bgm['currentTime']
+    current_time = sv.bgm['currentTime']
+    past_time = round(float((datetime.now() - sv.bgm['updateTime']).total_seconds()), 3)
+    if (sv.bgm['active']):
+        current_time += past_time
+    return current_time
 
 
 def update_bgm(sv, data):
