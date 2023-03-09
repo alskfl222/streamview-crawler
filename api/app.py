@@ -94,11 +94,10 @@ class StreamviewServer():
                 event_name = data['event']['name']
                 if data['event']['from'] in ['controller', 'viewer', 'stream'] and event_name == 'session':
                     await self.init_list(websocket)
-                    await common.send_res(self, {}, 'init')
                     session_id = self.sm.add_session(
                         websocket, data['event']['from'])
                     await websocket.send_json({"event": {"to": data['event']['from'], "name": "session"}, "data": {
-                                        "sessionId": session_id}})
+                        "sessionId": session_id}})
                     continue
 
                 if event_name.startswith('bgm'):
@@ -125,9 +124,10 @@ class StreamviewServer():
             },
             "data": {
                 "queue": self.queue,
-                "list_title": self.db.latest_list['title'],
-                "state": "pause",
-                "current_time": "0",
+                "listTitle": self.db.latest_list['title'],
+                "active": self.bgm_active,
+                "available": True,
+                "currentTime": "0",
                 "duration": "0"
             }
         }
