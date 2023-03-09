@@ -1,7 +1,7 @@
 async def send_res(sv, data, message):
     res = {
         "event": {
-            "type": 'all',
+            "to": 'all',
             "name": "bgm.queue",
             "message": message
         },

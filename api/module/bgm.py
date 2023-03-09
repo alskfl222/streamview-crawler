@@ -80,7 +80,7 @@ async def add_new_session(sv, ws: WebSocket, session_type):
     session_id = sv.sm.add_session(ws, session_type)
     res = {
         "event": {
-            "type": 'controller,viewer',
+            "to": 'controller,viewer',
             "name": "bgm.session",
         },
         "data": {

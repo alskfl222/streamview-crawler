@@ -22,7 +22,7 @@ async def append_list(sv, data):
 async def next_song(sv):
     res = {
         "event": {
-            "type": 'stream',
+            "to": 'stream',
             "name": "obs.next",
         },
         "data": {

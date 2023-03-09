@@ -115,7 +115,7 @@ class StreamviewServer():
     async def init_list(self, websocket: WebSocket):
         res = {
             "event": {
-                "type": 'all',
+                "to": 'all',
                 "name": "bgm.queue",
                 "message": "init"
             },
