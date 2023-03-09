@@ -76,28 +76,6 @@ async def song_inactive(sv, ws: WebSocket, data):
     print(data)
 
 
-async def add_new_session(sv, ws: WebSocket, session_type):
-    session_id = sv.sm.add_session(ws, session_type)
-    res = {
-        "event": {
-            "to": 'controller,viewer',
-            "name": "bgm.session",
-        },
-        "data": {
-            "sessionId": session_id
-        }
-    }
-    print(sv.sm.sessions)
-    await ws.send_json(res)
-
-
-async def manage_session(sv, ws: WebSocket, event):
-    if event['id']:
-        del sv.sm.sessions[event['id']]
-    else:
-        await add_new_session(sv, ws, event['type'])
-
-
 async def handler(sv, ws: WebSocket, data):
     event = data['event']
     ws_data = data['data'] if 'data' in data else None
