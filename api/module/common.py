@@ -1,3 +1,10 @@
+from datetime import datetime
+
+
+def get_current_time(sv):
+    return sv.bgm['currentTime'] if sv.bgm['currentTime'] != 0 else round(float((datetime.now() - sv.bgm['startTime']).total_seconds()), 3)
+
+
 def update_bgm(sv, data):
     sv.bgm = {
         **sv.bgm,

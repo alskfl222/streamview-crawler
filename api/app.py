@@ -133,7 +133,7 @@ class StreamviewServer():
                 "bgm": {
                     **self.bgm,
                     "startTime": f"{self.bgm['startTime']}",
-                    "currentTime": self.bgm['currentTime'] if self.bgm['currentTime'] != 0 else (datetime.now() - self.bgm['startTime']).total_seconds(),
+                    "currentTime": common.get_current_time(self),
                 },
             }
         }
