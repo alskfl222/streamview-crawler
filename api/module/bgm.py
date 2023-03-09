@@ -47,7 +47,7 @@ async def append_list(sv, data):
     insert_item = await sv.finder.find_song(data['query'])
     requested_queue = [x for x in sv.queue[1:] if x['from'] != "list"]
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
-    update_bgm()
+    update_bgm(sv, data)
     if not insert_item:
         print("CANNOT FOUND")
         await send_res(sv, 'not found')

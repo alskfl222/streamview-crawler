@@ -3,7 +3,6 @@ from datetime import datetime
 
 def get_current_time(sv):
     print(sv.bgm['currentTime'])
-    print(sv.bgm['currentTime'] != 0)
     return round(float((datetime.now() - sv.bgm['updateTime']).total_seconds()), 3) + sv.bgm['currentTime']
 
 
