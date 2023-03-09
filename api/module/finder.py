@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import traceback
 import time
 from playwright.async_api import async_playwright
 
@@ -28,6 +29,7 @@ class Finder():
             return
         try:
             # print(f"{self.video_base_url}{query}")
+            print("TRY ID URI")
             await self.page.goto(f"{self.video_base_url}{query}")
 
             retry = 0
@@ -54,8 +56,9 @@ class Finder():
                         "active": True,
                     }
                     return item
-                print(f'retry : {retry + 1}', flush=True)
                 retry += 1
+            print("CANNOT FOUND BY ID")
+            print("TRY SEARCH QUERY")
             await self.page.goto(f"{self.search_base_url}{query}")
             items_el = self.page.locator('div#contents > ytd-video-renderer')
             items_count = await items_el.count()
@@ -77,7 +80,9 @@ class Finder():
                 }
                 return item
             else:
+                traceback.print_exc()
                 return None
         except:
             print('check error!')
+            traceback.print_exc()
             return None
