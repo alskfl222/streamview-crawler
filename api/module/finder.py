@@ -80,6 +80,7 @@ class Finder():
                 }
                 return item
             else:
+                print('error?')
                 traceback.print_exc()
                 return None
         except:

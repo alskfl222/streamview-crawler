@@ -96,7 +96,7 @@ class StreamviewServer():
                     await self.init_list(websocket)
                     session_id = self.sm.add_session(
                         websocket, data['event']['from'])
-                    websocket.send_json({"event": {"to": data['event']['from'], "name": "session"}, "data": {
+                    await websocket.send_json({"event": {"to": data['event']['from'], "name": "session"}, "data": {
                                         "sessionId": session_id}})
                     continue
 
