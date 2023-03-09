@@ -36,7 +36,7 @@ class Observer():
         ws.connect(WS_SERVER)
         data = {
             "event": {
-                "type": "obs",
+                "from": "obs",
                 "name": f"obs.{self.commands[command]}"
             },
             "data": {
