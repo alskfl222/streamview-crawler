@@ -36,6 +36,7 @@ class SessionManager():
             "websocket": websocket
         }
         self.sessions[session_id] = session
+        print(f"SESSION TYPE {session_type} : {session_id} ADDED")
         return session_id
 
     def remove_session(self, websocket: WebSocket):
@@ -48,7 +49,8 @@ class SessionManager():
         hour = str(diff).split(':')[0]
         minute = str(diff).split(':')[1]
         second = str(diff).split(':')[2].split('.')[0]
-        print(f'{session_id} removed : {hour:0<2}:{minute}:{second}')
+        print(f"SESSION TYPE {session['type']} : {session_id} removed")
+        print(f"TIME : {hour:0<2}:{minute:0<2}:{second:0<2}")
         del self.sessions[session_id]
 
     async def emit_all(self, data):
