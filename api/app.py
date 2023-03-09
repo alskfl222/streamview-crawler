@@ -41,7 +41,7 @@ class StreamviewServer():
         self.sub_process = None
         self.bgm = {
             "active": False,
-            "startTime": datetime.now(),
+            "updateTime": datetime.now(),
             "currentTime": 0,
             "duration": 0
         }
@@ -132,7 +132,7 @@ class StreamviewServer():
                 "listTitle": self.db.latest_list['title'],
                 "bgm": {
                     **self.bgm,
-                    "startTime": f"{self.bgm['startTime']}",
+                    "updateTime": f"{self.bgm['updateTime']}",
                     "currentTime": common.get_current_time(self),
                 },
             }

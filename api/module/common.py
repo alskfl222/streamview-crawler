@@ -3,12 +3,14 @@ from datetime import datetime
 
 def get_current_time(sv):
     print(sv.bgm['currentTime'])
-    return sv.bgm['currentTime'] if sv.bgm['currentTime'] != 0 else round(float((datetime.now() - sv.bgm['startTime']).total_seconds()), 3)
+    print(sv.bgm['currentTime'] != 0)
+    return round(float((datetime.now() - sv.bgm['updateTime']).total_seconds()), 3) + sv.bgm['currentTime']
 
 
 def update_bgm(sv, data):
     sv.bgm = {
         **sv.bgm,
+        "updateTime": datetime.now(),
         "currentTime": float(data['current']) if 'current' in data else 0,
         "duration": float(data['duration']) if 'current' in data else 0
     }
@@ -26,7 +28,7 @@ async def send_res(sv, message):
             "listTitle": sv.db.latest_list['title'],
             "bgm": {
                 **sv.bgm,
-                "startTime": f"{sv.bgm['startTime']}"}
+                "updateTime": f"{sv.bgm['updateTime']}"}
         }
     }
     await sv.sm.emit_all(res)

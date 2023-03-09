@@ -23,7 +23,7 @@ async def stop_video(sv, data):
     new_idx = randint(0, len(cand_list) - 1)
     print(f"NEW ITEM: {cand_list[new_idx]}")
     sv.queue = [*sv.queue[1:], cand_list[new_idx]]
-    sv.bgm['startTime'] = datetime.now()
+    sv.bgm['updateTime'] = datetime.now()
     update_bgm(sv, data)
     await send_res(sv, 'stop')
 
