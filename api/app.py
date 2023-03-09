@@ -82,7 +82,7 @@ class StreamviewServer():
 
             while True:
                 raw = await websocket.receive()
-                # print(f"RAW : {raw}")
+                print(f"RAW : {raw}")
                 websocket_type = raw['type']
                 if websocket_type == 'websocket.disconnect':
                     try:
