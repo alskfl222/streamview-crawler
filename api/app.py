@@ -41,8 +41,8 @@ class StreamviewServer():
         self.sub_process = None
         self.bgm = {
             "active": False,
-            "start_time": datetime.now(),
-            "current_time": 0,
+            "startTime": datetime.now(),
+            "currentTime": 0,
             "duration": 0
         }
 
