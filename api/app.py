@@ -2,8 +2,6 @@
 # coding: utf-8
 
 import os
-from subprocess import Popen, PIPE
-import time
 from datetime import datetime
 import random
 import json
@@ -11,23 +9,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket
-from pydantic import BaseModel
 import uvicorn
 from dotenv import load_dotenv
+from router.observer import observer_routing
 from module import *
 
+load_dotenv()
 
-class Item(BaseModel):
-    streamId: str
-
-
-class StreamviewServer():
+class StreamviewServer(FastAPI):
     def __init__(self):
-        load_dotenv()
         PORT = int(os.getenv('PORT'))
 
-        app = FastAPI()
-        app.mount("/static", StaticFiles(directory="static"), name="static")
+        super().__init__()
+        self.mount("/static", StaticFiles(directory="static"), name="static")
 
         today = datetime.now()
         monthly_list_name = f'BGM {today.year} {today.month:0>2}'
@@ -46,41 +40,13 @@ class StreamviewServer():
             "duration": 0
         }
 
-        @app.get("/")
+        @self.get('')
         async def get_index():
             return "qwerty"
+        
+        observer_routing(self)
 
-        @app.post("/observer")
-        async def init_observer(item: Item):
-            if self.sub_process:
-                self.sub_process.kill()
-            command = ["python3", "observer.py", item.streamId]
-            print(f"INIT OBSERVER : {item.streamId}")
-            print(f"COMMAND : {command}")
-            print(f"WS SERVER URL : {os.getenv('WS_SERVER_CLOUD')}")
-            self.sub_process = Popen(command, preexec_fn=lambda: os.setpgrp(),
-                                     stdout=PIPE, stderr=PIPE)
-            time.sleep(3)
-            return self.sub_process.poll()
-
-        @app.post("/observer/alive")
-        async def check_observer():
-            if self.sub_process:
-                return self.sub_process.poll()
-            else:
-                return "No sub_process"
-
-        @app.post("/observer/stop")
-        async def stop_observer():
-            if self.sub_process:
-                self.sub_process.kill()
-                # stdout, stderr = self.sub_process.communicate()
-                # return {"stdout": stdout, "stderr": stderr}
-                return self.sub_process.poll()
-            else:
-                return "No sub_process"
-
-        @app.websocket("/ws")
+        @self.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             await websocket.accept()
             await self.finder.init()
@@ -98,7 +64,7 @@ class StreamviewServer():
                 data = json.loads(raw['text'])
                 event_name = data['event']['name']
                 if data['event']['from'] in ['controller', 'viewer', 'stream'] and event_name == 'session':
-                    await self.init_list(websocket)
+                    await common.init_list(self, websocket)
                     session_id = self.sm.add_session(
                         websocket, data['event']['from'])
                     await websocket.send_json({"event": {"to": data['event']['from'], "name": "session"}, "data": {
@@ -110,7 +76,7 @@ class StreamviewServer():
                 if event_name.startswith('obs'):
                     await observer.handler(self, data)
 
-        app.add_middleware(
+        self.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
             allow_credentials=True,
@@ -118,26 +84,7 @@ class StreamviewServer():
             allow_headers=["*"],
         )
 
-        uvicorn.run(app=app, host='0.0.0.0', port=PORT)
-
-    async def init_list(self, websocket: WebSocket):
-        res = {
-            "event": {
-                "to": 'all',
-                "name": "bgm.queue",
-                "message": "init"
-            },
-            "data": {
-                "queue": self.queue,
-                "listTitle": self.db.latest_list['title'],
-                "bgm": {
-                    **self.bgm,
-                    "updateTime": f"{self.bgm['updateTime']}",
-                    "currentTime": common.get_current_time(self),
-                },
-            }
-        }
-        await websocket.send_json(res)
+        uvicorn.run(app=self, host='0.0.0.0', port=PORT)
 
 
 if __name__ == '__main__':

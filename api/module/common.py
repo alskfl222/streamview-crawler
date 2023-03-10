@@ -1,5 +1,23 @@
 from datetime import datetime
 
+async def init_list(sv, websocket):
+    res = {
+        "event": {
+            "to": 'all',
+            "name": "bgm.queue",
+            "message": "init"
+        },
+        "data": {
+            "queue": sv.queue,
+            "listTitle": sv.db.latest_list['title'],
+            "bgm": {
+                **sv.bgm,
+                "updateTime": f"{sv.bgm['updateTime']}",
+                "currentTime": get_current_time(sv),
+            },
+        }
+    }
+    await websocket.send_json(res)
 
 def get_current_time(sv):
     current_time = sv.bgm['currentTime']
