@@ -53,7 +53,7 @@ class Finder():
                         "id": item_id,
                         "channel": channel,
                         "channel_id": channel_id,
-                        "active": True,
+                        "available": True,
                     }
                     return item
                 retry += 1
@@ -76,7 +76,7 @@ class Finder():
                     "id": item_id,
                     "channel": channel,
                     "channel_id": channel_id,
-                    "active": True,
+                    "available": True,
                 }
                 return item
             else:

@@ -91,7 +91,7 @@ class DB():
                 "channel": x['snippet']['videoOwnerChannelTitle'] if 'videoOwnerChannelTitle' in x['snippet'] else 'unavailable',
                 "channel_id": x['snippet']['videoOwnerChannelId'] if 'videoOwnerChannelTitle' in x['snippet'] else 'unavailable',
                 "from": "list",
-                "active": True if 'videoOwnerChannelTitle' in x['snippet'] else False
+                "available": True if 'videoOwnerChannelTitle' in x['snippet'] else False
             } for x in data['items']
         ]
         if "nextPageToken" in data:
@@ -115,12 +115,15 @@ class DB():
         flatten_items = sum(lists_items, [])
         total_items = [dict(t)
                        for t in {tuple(d.items()) for d in flatten_items}]
-
+        print(f"TOTAL LISTS : {len(lists_items)}")
+        print(f"TOTAL ITEMS : {len(total_items)}")
+        print("INSERT ITEMS INTO DB TOTAL")
         with self.total.batch_writer() as batch:
             for item in total_items:
                 batch.put_item(
                     Item=item
                 )
+        print("INSERT ITEMS INTO DB TOTAL")
         with self.monthly.batch_writer() as batch:
             for idx, items in enumerate(lists_items):
                 row = {
@@ -134,8 +137,13 @@ class DB():
     def check_update_monthly(self):
         playlists = self.get_playlists()
         self.latest_list = playlists[-1]
+        # print(f"TOTAL LISTS : {len(playlists)}")
         print(f"LATEST LIST : {self.latest_list['title']}")
         exist_list = [x['title'] for x in self.monthly.scan()['Items']]
+        if not exist_list:
+            print("기존 플레이리스트 없음. 초기화 진행...")
+            self.input_init()
+            return self.check_update_monthly()
         new_list = [x for x in playlists if x['title'] not in exist_list]
         if new_list:
             print(f"FOUND new {len(new_list)} LIST")
@@ -182,7 +190,7 @@ class DB():
             'title').eq(self.latest_list['title']))
         item = res['Items'][0]
         monthly_list = item['items']
-        monthly_list_active = [x for x in monthly_list if x["active"]]
+        monthly_list_active = [x for x in monthly_list if x["available"]]
         last_streamed_song = self.get_last_streamed_song()
         if last_streamed_song:
             return [last_streamed_song, *monthly_list_active]
