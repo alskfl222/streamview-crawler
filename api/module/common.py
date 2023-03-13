@@ -36,12 +36,12 @@ def update_bgm(sv, data):
     }
 
 
-async def send_res(sv, message):
+async def send_res(sv):
     res = {
         "event": {
             "to": 'all',
             "name": "bgm.queue",
-            "message": message
+            "observer": sv.sub_process.poll() if sv.sub_process else "No init"
         },
         "data": {
             "queue": sv.queue,

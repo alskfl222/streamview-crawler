@@ -14,7 +14,7 @@ async def play_video(sv, data):
         print("스트림 목록 업데이트")
         sv.db.append_streamed(data)
     update_bgm(sv, data)
-    await send_res(sv, 'start')
+    await send_res(sv)
 
 
 async def stop_video(sv, data):
@@ -25,20 +25,20 @@ async def stop_video(sv, data):
     sv.queue = [*sv.queue[1:], cand_list[new_idx]]
     sv.bgm['updateTime'] = datetime.now()
     update_bgm(sv, data)
-    await send_res(sv, 'stop')
+    await send_res(sv)
 
 
 async def pause_video(sv, data):
     print(f"PAUSE VIDEO: {data}")
     sv.bgm["active"] = False
     update_bgm(sv, data)
-    await send_res(sv, 'pause')
+    await send_res(sv)
 
 
 async def buffering_video(sv, data):
     print(f"BUFFERING VIDEO: {data}")
     update_bgm(sv, data)
-    await send_res(sv, 'buffering')
+    await send_res(sv)
 
 
 async def append_list(sv, data):
@@ -50,16 +50,16 @@ async def append_list(sv, data):
     update_bgm(sv, data)
     if not insert_item:
         print("CANNOT FOUND")
-        await send_res(sv, 'not found')
+        await send_res(sv)
     elif insert_item['id'] in [x['id'] for x in requested_queue]:
         print("DUPLICATED")
-        await send_res(sv, 'duplicated')
+        await send_res(sv)
     else:
         insert_item = {**insert_item, "from": data["from"]}
         sv.queue = [sv.queue[0], *requested_queue,
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
-        await send_res(sv, 'inserted')
+        await send_res(sv)
 
 
 async def delete_queue(sv, data):
@@ -70,7 +70,7 @@ async def delete_queue(sv, data):
     sv.queue = [*sv.queue[0:data['idx']], *
                 sv.queue[data['idx']+1:], cand_list[new_idx]]
     update_bgm(sv, data)
-    await send_res(sv, 'deleted')
+    await send_res(sv)
 
 
 async def update_monthly_list(sv):

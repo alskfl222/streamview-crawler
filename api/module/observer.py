@@ -8,16 +8,16 @@ async def append_list(sv, data):
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
     if not insert_item:
         print("CANNOT FOUND")
-        await send_res(sv, data, 'not found')
+        await send_res(sv)
     elif insert_item['id'] in [x['id'] for x in requested_queue]:
         print("DUPLICATED")
-        await send_res(sv, data, 'duplicated')
+        await send_res(sv)
     else:
         insert_item = {**insert_item, "from": data["from"]}
         sv.queue = [sv.queue[0], *requested_queue,
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
-        await send_res(sv, data, 'inserted')
+        await send_res(sv)
 
 async def next_song(sv):
     res = {
