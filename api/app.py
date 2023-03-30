@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import asyncio
 import os
+import traceback
+import threading
+import queue
+import time
 from datetime import datetime
 import random
 import json
@@ -11,10 +16,37 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket
 import uvicorn
 from dotenv import load_dotenv
-from router.observer import observer_routing
 from module import *
+from router.observer import observer_routing
 
 load_dotenv()
+print(f"ENV : {os.getenv('PY_ENV')}")
+
+
+async def consumer(q: queue.SimpleQueue):
+    while True:
+        try:
+            args = q.get_nowait()
+            sv, websocket, data = args
+            if data['event']['name'].startswith('bgm'):
+                await bgm.handler(sv, websocket, data)
+            if data['event']['name'].startswith('obs'):
+                await observer.handler(sv, data)
+        except queue.Empty:
+            time.sleep(3)
+            continue
+        except:
+            traceback.print_exc()
+            break
+
+
+def _consumer(q: queue.SimpleQueue):
+    try:
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(consumer(q))
+    except:
+        traceback.print_exc()
+
 
 class StreamviewServer(FastAPI):
     def __init__(self):
@@ -30,30 +62,34 @@ class StreamviewServer(FastAPI):
         self.db = db.DB()
         self.original = self.db.get_monthly_list_active()
         self.queue = [self.original[0], *random.sample(self.original, k=9)]
-        self.finder = finder.Finder()
         self.sm = session.SessionManager()
-        self.sub_process = None
+        self.observer = None
         self.bgm = {
             "active": False,
             "updateTime": datetime.now(),
             "currentTime": 0,
             "duration": 0
         }
+        self.tasks = queue.SimpleQueue()
+        self.consumers = [threading.Thread(target=_consumer, args=(
+            self.tasks,), daemon=True), threading.Thread(target=_consumer, args=(self.tasks,), daemon=True)]
+
+        for p in self.consumers:
+            p.start()
 
         @self.get('')
         async def get_index():
             return "qwerty"
-        
+
         observer_routing(self)
 
         @self.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             await websocket.accept()
-            await self.finder.init()
 
             while True:
                 raw = await websocket.receive()
-                # print(f"RAW : {raw}")
+                print(f"RAW : {raw}")
                 websocket_type = raw['type']
                 if websocket_type == 'websocket.disconnect':
                     try:
@@ -62,8 +98,7 @@ class StreamviewServer(FastAPI):
                         return
 
                 data = json.loads(raw['text'])
-                event_name = data['event']['name']
-                if data['event']['from'] in ['controller', 'viewer', 'stream'] and event_name == 'session':
+                if data['event']['from'] in ['controller', 'viewer', 'stream'] and data['event']['name'] == 'session':
                     await common.init_list(self, websocket)
                     session_id = self.sm.add_session(
                         websocket, data['event']['from'])
@@ -71,10 +106,8 @@ class StreamviewServer(FastAPI):
                         "sessionId": session_id}})
                     continue
 
-                if event_name.startswith('bgm'):
-                    await bgm.handler(self, websocket, data)
-                if event_name.startswith('obs'):
-                    await observer.handler(self, data)
+                self.tasks.put((self, websocket, data))
+                print(self.tasks.qsize())
 
         self.add_middleware(
             CORSMiddleware,

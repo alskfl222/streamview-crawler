@@ -41,7 +41,7 @@ async def send_res(sv):
         "event": {
             "to": 'all',
             "name": "bgm.queue",
-            "observer": sv.sub_process.poll() if sv.sub_process else "No init"
+            "observer": sv.observer.poll() if sv.observer else "No init"
         },
         "data": {
             "queue": sv.queue,

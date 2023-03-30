@@ -41,10 +41,13 @@ async def buffering_video(sv, data):
     await send_res(sv)
 
 
+async def find_video(sv, data):
+    pass
+
 async def append_list(sv, data):
     print(f"QUERY: {data['query']}")
-    print(f"FROM: {data['from']}")
-    insert_item = await sv.finder.find_song(data['query'])
+    print(f"ITEM: {data['data']}")
+    insert_item = data['data']['song']
     requested_queue = [x for x in sv.queue[1:] if x['from'] != "list"]
     rest_queue = [x for x in sv.queue[1:] if x['from'] == "list"]
     update_bgm(sv, data)
@@ -55,7 +58,7 @@ async def append_list(sv, data):
         print("DUPLICATED")
         await send_res(sv)
     else:
-        insert_item = {**insert_item, "from": data["from"]}
+        insert_item = {**insert_item, "from": data["data"]['from']}
         sv.queue = [sv.queue[0], *requested_queue,
                     insert_item, *rest_queue][:10]
         print(f"APPEND VIDEO: {insert_item}")
@@ -96,6 +99,8 @@ async def handler(sv, ws: WebSocket, data):
         await pause_video(sv, ws_data),
     if event['name'].endswith('buffering'):
         await buffering_video(sv, ws_data),
+    if event['name'].endswith('find'):
+        await find_video(sv, ws_data),
     if event['name'].endswith('append'):
         await append_list(sv, ws_data),
     if event['name'].endswith('delete'):

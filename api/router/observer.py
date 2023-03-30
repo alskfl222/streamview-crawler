@@ -14,29 +14,31 @@ def observer_routing(sv):
 
     @router.post('')
     async def init(item: Item):
-        if sv.sub_process:
-            sv.sub_process.kill()
+        if sv.observer:
+            stdout, stderr = sv.observer.communicate()
+            print({"stdout": stdout, "stderr": stderr})
+            sv.observer.kill()
         command = ["python3", "observer.py", item.streamId]
         print(f"INIT OBSERVER : {item.streamId}")
-        sv.sub_process = Popen(command, preexec_fn=lambda: os.setpgrp(),
+        sv.observer = Popen(command, preexec_fn=lambda: os.setpgrp(),
                                stdout=PIPE, stderr=PIPE)
         time.sleep(3)
-        return sv.sub_process.poll()
+        return sv.observer.poll()
 
     @router.post("/alive")
     async def check():
-        if sv.sub_process:
-            return sv.sub_process.poll()
+        if sv.observer:
+            return sv.observer.poll()
         else:
             return "No sub_process"
 
     @router.post("/stop")
     async def stop():
-        if sv.sub_process:
-            sv.sub_process.kill()
-            # stdout, stderr = sv.sub_process.communicate()
+        if sv.observer:
+            sv.observer.kill()
+            # stdout, stderr = sv.observer.communicate()
             # return {"stdout": stdout, "stderr": stderr}
-            return sv.sub_process.poll()
+            return sv.observer.poll()
         else:
             return "No sub_process"
 

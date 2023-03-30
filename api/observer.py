@@ -11,7 +11,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-WS_SERVER = os.getenv("WS_SERVER_CLOUD")
+WS_SERVER = os.getenv("WS_SERVER_CLOUD") if os.getenv(
+    "PY_ENV") == "production" else os.getenv("WS_SERVER_LOCAL")
 
 
 class Observer():
