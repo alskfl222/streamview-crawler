@@ -72,7 +72,7 @@ class StreamviewServer(FastAPI):
         }
         self.tasks = queue.SimpleQueue()
         self.consumers = [threading.Thread(target=_consumer, args=(
-            self.tasks,), daemon=True), threading.Thread(target=_consumer, args=(self.tasks,), daemon=True)]
+            self.tasks,), daemon=True)]
 
         for p in self.consumers:
             p.start()
@@ -107,7 +107,6 @@ class StreamviewServer(FastAPI):
                     continue
 
                 self.tasks.put((self, websocket, data))
-                print(self.tasks.qsize())
 
         self.add_middleware(
             CORSMiddleware,

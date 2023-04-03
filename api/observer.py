@@ -21,7 +21,7 @@ class Observer():
         print()
         self.chat = pytchat.create(video_id=stream_id)
         self.commands = {
-            '신청곡': 'append',
+            '신청곡': 'find',
             '다음곡': 'next'
         }
 

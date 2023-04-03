@@ -109,10 +109,11 @@ def find_song(query):
 
 
 if __name__ == '__main__':
-    query = " ".join(sys.argv[1:])
+    req_from = sys.argv[1]
+    query = " ".join(sys.argv[2:])
     try:
         song = find_song(query)
-        send_ws(song, 'chat')
+        send_ws(song, req_from)
     except:
         traceback.print_exc()
         sys.exit(0)

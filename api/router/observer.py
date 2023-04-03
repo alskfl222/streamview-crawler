@@ -30,7 +30,7 @@ def observer_routing(sv):
         if sv.observer:
             return sv.observer.poll()
         else:
-            return "No sub_process"
+            return "No observer"
 
     @router.post("/stop")
     async def stop():
