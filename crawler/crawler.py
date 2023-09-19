@@ -40,7 +40,7 @@ today_date = get_kst_today()
 
 current_path = Path.cwd()
 image_dir = current_path.parent / "image" / \
-    f"{today_date.year}" / f"{today_date.month}"
+    f"{today_date:%Y}" / f"{today_date:%m}"
 image_dir.mkdir(parents=True, exist_ok=True)
 
 chars_path = current_path / 'chars.csv'
