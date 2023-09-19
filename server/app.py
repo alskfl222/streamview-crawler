@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/image", StaticFiles(directory="../image"), name="image")
 
 @app.get('/check')
 async def health_check():
