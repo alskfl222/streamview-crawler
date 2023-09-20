@@ -10,7 +10,7 @@ app = FastAPI()
 app.mount("/image", StaticFiles(directory="../image"), name="image")
 
 @app.get('/check')
-async def health_check():
+def crawler_health_check():
     return "qwerty"
 
 app.add_middleware(
