@@ -38,7 +38,7 @@ def get_kst_today():
 today_date = get_kst_today()
 
 
-project_path = Path("/home/ubuntu/streamview")
+project_path = Path("/home/ubuntu/crawler")
 image_dir = project_path / "image" / \
     f"{today_date:%Y}" / f"{today_date:%m}"
 image_dir.mkdir(parents=True, exist_ok=True)
