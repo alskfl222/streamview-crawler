@@ -39,7 +39,7 @@ today_date = get_kst_today()
 
 
 project_path = Path("/home/ubuntu/streamview")
-image_dir = project_path.parent / "image" / \
+image_dir = project_path / "image" / \
     f"{today_date:%Y}" / f"{today_date:%m}"
 image_dir.mkdir(parents=True, exist_ok=True)
 
