@@ -38,12 +38,12 @@ def get_kst_today():
 today_date = get_kst_today()
 
 
-current_path = Path("/home/ubuntu/streamview")
-image_dir = current_path.parent / "image" / \
+project_path = Path("/home/ubuntu/streamview")
+image_dir = project_path.parent / "image" / \
     f"{today_date:%Y}" / f"{today_date:%m}"
 image_dir.mkdir(parents=True, exist_ok=True)
 
-chars_path = current_path / 'chars.csv'
+chars_path = project_path / 'crawler' / 'chars.csv'
 with open(f"{str(chars_path)}", encoding='utf-8') as f:
     chars = f.readline().strip().split(',')
 
